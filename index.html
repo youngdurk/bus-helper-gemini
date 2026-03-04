@@ -41,8 +41,6 @@ header h1{font-weight:900;font-size:1.3rem;}
 .edit-item {background:var(--card2); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #334155;}
 .edit-item label{display:block; font-size:0.75rem; color:var(--ye); margin-bottom:4px; margin-top:8px; font-weight:bold;}
 .edit-item input, .edit-item textarea{width:100%; background:#0d1b2a; border:1px solid #475569; color:white; padding:10px; border-radius:8px; font-size:0.85rem;}
-.edit-item textarea{height:45px; resize: none;}
-.day-grid{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
 .btn-save{display:block; width:100%; background:var(--gr); color:#0d1b2a; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:15px;}
 
@@ -66,9 +64,7 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
 <header><h1>🚌 승하차 도우미</h1></header>
 
 <div class="container" id="main-view">
-    <div id="tts-ready-msg" style="background: rgba(6, 214, 160, 0.1); border: 1px solid var(--gr); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--gr); cursor: pointer; text-align: center;" onclick="testVoice()">
-        📢 사운드 테스트 (여기를 눌러 소리가 나는지 확인하세요)
-    </div>
+    <!-- 사운드 테스트 메시지 제거됨 -->
 
     <div class="info-card">
         <div class="info-row">
@@ -111,9 +107,15 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
             <label>👤 성우 선택</label>
             <select id="voice-select"></select>
         </div>
-        <div class="input-group">
-            <label>📍 인식 반경 (미터)</label>
-            <input type="number" id="cfg-radius">
+        <div class="input-group" style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>📍 인식 반경 (m)</label>
+                <input type="number" id="cfg-radius">
+            </div>
+            <div style="flex: 1;">
+                <label>⏱️ 재안내 대기 (분)</label>
+                <input type="number" id="cfg-wait-time">
+            </div>
         </div>
         <button onclick="saveConfig()" class="btn-main" style="width:100%; border-radius:10px;">설정 저장</button>
         <button onclick="resetVoiceEngine()" class="btn-sub" style="background:#4b5563;">🔊 음성 엔진 리셋</button>
@@ -136,7 +138,8 @@ let stations = [];
 let config = { 
     radius: 80, 
     voiceName: "", 
-    announceText: "이번 정류장은 [정류장] 입니다. [명단] 어린이 [동작] 준비하세요." 
+    announceText: "이번 정류장은 [정류장] 입니다. [명단] 어린이 [동작] 준비하세요.",
+    waitTime: 25 
 };
 let isTracking = false;
 let watchId = null;
@@ -146,7 +149,6 @@ let isListVisible = false;
 let firstGpsSkip = true; 
 const synth = window.speechSynthesis;
 
-// 숫자 변환 헬퍼 (TTS용)
 function replaceNumbersForTTS(text) {
     const units = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
     function numToKorean(numStr) {
@@ -165,16 +167,14 @@ function replaceNumbersForTTS(text) {
 
 function init() {
     const saved = localStorage.getItem('bus_stations_csv_v3');
-    if(saved) {
-        try { stations = JSON.parse(saved); } catch(e) { stations = []; }
-    }
-    const savedCfg = localStorage.getItem('bus_config_v7');
-    if(savedCfg) {
-        try { config = {...config, ...JSON.parse(savedCfg)}; } catch(e) {}
-    }
+    if(saved) { try { stations = JSON.parse(saved); } catch(e) { stations = []; } }
+    
+    const savedCfg = localStorage.getItem('bus_config_v8');
+    if(savedCfg) { try { config = {...config, ...JSON.parse(savedCfg)}; } catch(e) {} }
     
     document.getElementById('cfg-radius').value = config.radius;
     document.getElementById('cfg-announce-text').value = config.announceText;
+    document.getElementById('cfg-wait-time').value = config.waitTime;
     
     renderMain();
     renderAdminList();
@@ -189,7 +189,7 @@ function loadVoices() {
     vs.innerHTML = '';
     if(voices.length === 0) {
         const opt = document.createElement('option');
-        opt.textContent = "성우 목록 로드 중...";
+        opt.textContent = "성우 로드 중...";
         vs.appendChild(opt);
         return;
     }
@@ -202,104 +202,60 @@ function loadVoices() {
     });
 }
 
-// 파일 핸들러 (인코딩 감지 시도)
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
-
-    // UTF-8로 먼저 시도해보고 글자가 깨져있는지 확인하는 더 안전한 방식
     const reader = new FileReader();
-    reader.onload = (event) => {
-        const result = event.target.result;
-        // 한글이 포함된 데이터에서 깨짐 현상이 있는지 간단히 체크 (특수 기호 비율 등)
-        // 여기서는 EUC-KR(윈도우 엑셀 기본)을 우선 적용하되, 실패 시 UTF-8 시도
-        parseCSV(result);
-    };
+    reader.onload = (event) => parseCSV(event.target.result);
     reader.readAsText(file, "EUC-KR"); 
 }
 
 function parseCSV(text) {
     try {
-        if (!text || text.length < 10) {
-            alert("파일 내용이 너무 적습니다.");
-            return;
-        }
-
         const rows = [];
         const seenNames = new Set();
-        // 줄바꿈 처리 유연하게
         const lines = text.split(/\r?\n/);
-        
-        console.log("CSV 파싱 시작, 총 라인 수:", lines.length);
-
         for(let i = 1; i < lines.length; i++) {
             let line = lines[i].trim();
             if(!line) continue;
-            
-            // CSV 콤마 분리 (따옴표 내 콤마 무시)
             const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-            
             if(cols.length >= 3) {
                 const stopName = cols[0];
                 const lat = parseFloat(cols[1]);
                 const lng = parseFloat(cols[2]);
-                
-                // 데이터 유효성 검사 (좌표가 숫자여야 함)
-                if (!stopName || isNaN(lat) || isNaN(lng)) {
-                    console.warn(`라인 ${i+1} 데이터 무시:`, cols);
-                    continue;
-                }
+                if (!stopName || isNaN(lat) || isNaN(lng)) continue;
                 if (seenNames.has(stopName)) continue;
-                
                 seenNames.add(stopName);
                 rows.push({
-                    name: stopName, 
-                    lat: lat, 
-                    lng: lng,
-                    morning: cols[3] || "", 
-                    mon: cols[4] || "", 
-                    tue: cols[5] || "", 
-                    wed: cols[6] || "", 
-                    thu: cols[7] || "", 
-                    fri: cols[8] || ""
+                    name: stopName, lat: lat, lng: lng,
+                    morning: cols[3] || "", mon: cols[4] || "", tue: cols[5] || "", wed: cols[6] || "", thu: cols[7] || "", fri: cols[8] || ""
                 });
             }
         }
-        
         if(rows.length > 0) {
             stations = rows;
             saveStations();
-            
-            // UI 즉시 강제 업데이트
             renderMain();
             renderAdminList();
-            
-            alert(`총 ${rows.length}개의 정류장을 성공적으로 불러왔습니다.`);
+            alert(`총 ${rows.length}개 정류장 로드 완료`);
             showTab('main');
-            
-            // 목록 자동 펼치기
             isListVisible = true;
             document.getElementById('station-list').style.display = 'block';
             document.getElementById('list-toggle-icon').innerText = '▲';
         } else {
-            alert("유효한 정류장 데이터를 찾을 수 없습니다.\n파일 형식이 [이름, 위도, 경도] 순서인지 확인해주세요.");
+            alert("유효한 데이터를 찾을 수 없습니다.");
         }
-    } catch(err) { 
-        console.error("CSV 파싱 에러:", err);
-        alert("CSV 파일을 읽는 중 오류가 발생했습니다."); 
-    }
+    } catch(err) { alert("파일을 읽는 중 오류가 발생했습니다."); }
 }
 
 function renderMain() {
     const list = document.getElementById('station-list');
     if(!list) return;
     list.innerHTML = '';
-    
     if (stations.length === 0) {
-        list.innerHTML = `<div class="empty-msg">데이터가 없습니다.<br>'관리' 탭에서 CSV 파일을 업로드해주세요.</div>`;
+        list.innerHTML = `<div class="empty-msg">데이터가 없습니다.<br>CSV 파일을 업로드해주세요.</div>`;
         return;
     }
-
     const isMorning = new Date().getHours() < 12;
     stations.forEach((s, i) => {
         const names = getNames(s);
@@ -329,7 +285,8 @@ function speak(idx, isRepeat = false) {
 
     if (isTracking && !isRepeat) {
         const now = Date.now();
-        if ((now - (announcedLog[s.name] || 0)) < 1800000) return;
+        const waitMs = (parseInt(config.waitTime) || 25) * 60 * 1000;
+        if ((now - (announcedLog[s.name] || 0)) < waitMs) return;
         announcedLog[s.name] = now;
     }
     
@@ -419,7 +376,7 @@ function highlight(idx) {
     const isMorning = new Date().getHours() < 12;
     document.getElementById('active-station-display').innerHTML = `
         <div class="stop-card active" style="border-width:4px;">
-            <div style="font-size:0.8rem; color:var(--gr); font-weight:700;">🚩 현재 위치 안내</div>
+            <div style="font-size:0.8rem; color:var(--gr); font-weight:700;">🚩 현재 안내 위치</div>
             <div class="stop-name" style="font-size:1.4rem;">${s.name}</div>
             <div class="child-list" style="font-size:1.1rem;">
                 <span style="color:var(--ye);">${isMorning ? '승차' : '하차'}:</span> ${names || '명단 없음'}
@@ -443,7 +400,8 @@ function saveConfig() {
     config.radius = document.getElementById('cfg-radius').value;
     config.voiceName = document.getElementById('voice-select').value;
     config.announceText = document.getElementById('cfg-announce-text').value;
-    localStorage.setItem('bus_config_v7', JSON.stringify(config));
+    config.waitTime = document.getElementById('cfg-wait-time').value;
+    localStorage.setItem('bus_config_v8', JSON.stringify(config));
     alert("설정이 저장되었습니다.");
 }
 
@@ -458,7 +416,6 @@ function showTab(tab) {
     document.getElementById('config-view').style.display = tab === 'config' ? 'block' : 'none';
     document.getElementById('tab-main').className = tab === 'main' ? 'active' : '';
     document.getElementById('tab-config').className = tab === 'config' ? 'active' : '';
-    if(tab === 'main') renderMain();
 }
 
 function updateInfo() {
@@ -497,15 +454,9 @@ function renderAdminList() {
             <div style="color:var(--bl); font-size:0.8rem; font-weight:900;">📍 #${i+1} ${s.name}</div>
             <label>이름</label><input type="text" id="en-${i}" value="${s.name}">
             <label style="color:var(--gr);">☀️ 오전 승차</label>
-            <textarea id="emorn-${i}">${s.morning || ""}</textarea>
-            <div class="day-grid">
-                <div><label>월 하차</label><textarea id="emon-${i}">${s.mon || ""}</textarea></div>
-                <div><label>화 하차</label><textarea id="etue-${i}">${s.tue || ""}</textarea></div>
-                <div><label>수 하차</label><textarea id="ewed-${i}">${s.wed || ""}</textarea></div>
-                <div><label>목 하차</label><textarea id="ethu-${i}">${s.thu || ""}</textarea></div>
-            </div>
-            <label>금요일 하차</label>
-            <textarea id="efri-${i}">${s.fri || ""}</textarea>
+            <textarea id="emorn-${i}" style="width:100%; height:40px;">${s.morning || ""}</textarea>
+            <label>🌙 오후 하차 (해당 요일 데이터만 표시됨)</label>
+            <textarea id="emon-${i}" style="width:100%; height:40px;">${s.mon || ""}</textarea>
             <button class="btn-save" onclick="updateStation(${i})">저장</button>
         `;
         list.appendChild(item);
@@ -516,10 +467,6 @@ function updateStation(i) {
     stations[i].name = document.getElementById(`en-${i}`).value;
     stations[i].morning = document.getElementById(`emorn-${i}`).value;
     stations[i].mon = document.getElementById(`emon-${i}`).value;
-    stations[i].tue = document.getElementById(`etue-${i}`).value;
-    stations[i].wed = document.getElementById(`ewed-${i}`).value;
-    stations[i].thu = document.getElementById(`ethu-${i}`).value;
-    stations[i].fri = document.getElementById(`efri-${i}`).value;
     saveStations();
     alert("저장되었습니다.");
 }
