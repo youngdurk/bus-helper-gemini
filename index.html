@@ -33,6 +33,10 @@ header h1{font-weight:900;font-size:1.3rem;}
 .stop-card.active{border:2px solid var(--ye);background:rgba(255,209,102,0.1);}
 .stop-name{font-weight:900;font-size:1.1rem;color:var(--ye);margin-bottom:6px;}
 .child-list{font-size:0.9rem;color:#cbd5e1;line-height:1.4;}
+.geo-info{font-size:0.7rem; color:#94a3b8; margin-top:8px; display: flex; align-items: center; gap: 8px;}
+
+.edit-panel{background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:10px; display:none;}
+.edit-panel input{background:#0d1b2a; border:1px solid #475569; color:white; padding:5px; border-radius:4px; font-size:0.8rem; width:100px; margin-right:5px;}
 
 nav{position:fixed;bottom:0;width:100%;max-width:500px;left:50%;transform:translateX(-50%);background:var(--card);display:flex;border-top:1px solid rgba(255,255,255,0.1);z-index:100;}
 nav button{flex:1;background:none;border:none;padding:15px;color:rgba(255,255,255,0.5);font-weight:700;}
@@ -45,7 +49,7 @@ nav button.active{color:var(--ye);}
 </head>
 <body>
 
-<header><h1>🚌 승하차 도우미 (2회 반복 모드)</h1></header>
+<header><h1>🚌 승하차 도우미 (위치 수정형)</h1></header>
 
 <div class="container" id="main-view">
     <div class="info-card">
@@ -152,11 +156,15 @@ function parseCSV(text) {
         }
         if(rows.length > 0) {
             stations = rows;
-            localStorage.setItem('bus_stations_csv', JSON.stringify(stations));
+            saveStations();
             alert(rows.length + "개의 정류장을 불러왔습니다!");
             renderMain(); showTab('main');
         }
     } catch(err) { alert("파일 읽기 오류"); }
+}
+
+function saveStations() {
+    localStorage.setItem('bus_stations_csv', JSON.stringify(stations));
 }
 
 function renderMain() {
@@ -174,10 +182,40 @@ function renderMain() {
                 <span style="color:var(--bl); font-weight:700;">${isMorning ? '⬆️ 승차' : '⬇️ 하차'}:</span> 
                 ${names || '대상자 없음'}
             </div>
+            <div class="geo-info">
+                <span>📍 위도: ${s.lat.toFixed(6)} / 경도: ${s.lng.toFixed(6)}</span>
+                <button onclick="toggleEdit(${i})" style="color:var(--ye); background:none; border:none; text-decoration:underline; font-size:0.7rem; cursor:pointer;">위치 수정</button>
+            </div>
+            <div id="edit-${i}" class="edit-panel">
+                <input type="number" id="lat-${i}" step="0.000001" value="${s.lat}">
+                <input type="number" id="lng-${i}" step="0.000001" value="${s.lng}">
+                <button onclick="updateLocation(${i})" style="background:var(--gr); color:black; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem;">저장</button>
+            </div>
             <button onclick="manualSpeak(${i})" style="position:absolute; right:15px; top:15px; background:none; border:none; font-size:1.3rem;">🔊</button>
         `;
         list.appendChild(card);
     });
+}
+
+function toggleEdit(i) {
+    const panel = document.getElementById(`edit-${i}`);
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+function updateLocation(i) {
+    const newLat = parseFloat(document.getElementById(`lat-${i}`).value);
+    const newLng = parseFloat(document.getElementById(`lng-${i}`).value);
+    
+    if(isNaN(newLat) || isNaN(newLng)) {
+        alert("올바른 숫자를 입력해주세요.");
+        return;
+    }
+    
+    stations[i].lat = newLat;
+    stations[i].lng = newLng;
+    saveStations();
+    alert("위치 정보가 수정되었습니다.");
+    renderMain();
 }
 
 function getNames(s) {
@@ -188,14 +226,12 @@ function getNames(s) {
     return map[day] || "";
 }
 
-// 음성 합성 함수 - 2회 반복 로직 포함
 function speak(idx, isRepeat = false) {
     const now = Date.now();
     const s = stations[idx];
     
     if (isSpeaking && !isRepeat) return; 
     
-    // 반복이 아닌 첫 안내일 때만 2시간 체크
     if (!isRepeat) {
         const lastTime = announcedLog[s.name] || 0;
         if ((now - lastTime) < 7200000) return; 
@@ -208,7 +244,6 @@ function speak(idx, isRepeat = false) {
     
     isSpeaking = true;
 
-    // 만약 첫 안내라면, 끝난 뒤 다시 호출하도록 설정
     const ut = new SpeechSynthesisUtterance(txt);
     ut.lang = 'ko-KR';
     const v = synth.getVoices().find(v => v.name === document.getElementById('voice-select').value);
@@ -216,16 +251,13 @@ function speak(idx, isRepeat = false) {
     
     ut.onend = function() {
         if (!isRepeat) {
-            // 첫 번째 안내 종료 후 1초 뒤에 다시 안내
             setTimeout(() => speak(idx, true), 1000);
         } else {
-            // 두 번째 안내까지 모두 종료
             isSpeaking = false;
         }
     };
     ut.onerror = function() { isSpeaking = false; };
     
-    // 첫 안내 시작 전엔 이전 음성 취소 (강제 클릭 시 대비)
     if(!isRepeat) synth.cancel();
     synth.speak(ut);
 }
@@ -247,7 +279,10 @@ function toggleTracking() {
     const btn = document.getElementById('track-btn');
     if(!isTracking) {
         isTracking = true; btn.innerText = "중지"; btn.classList.add('active');
-        watchId = navigator.geolocation.watchPosition(checkPos, null, {enableHighAccuracy:true});
+        watchId = navigator.geolocation.watchPosition(checkPos, (err) => {
+            console.error(err);
+            document.getElementById('gps-status').innerText = "GPS 오류: " + err.message;
+        }, {enableHighAccuracy:true});
     } else {
         isTracking = false; btn.innerText = "운행 시작"; btn.classList.remove('active');
         navigator.geolocation.clearWatch(watchId);
