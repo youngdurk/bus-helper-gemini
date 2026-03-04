@@ -23,23 +23,27 @@ header h1{font-weight:900;font-size:1.3rem;}
 .day-badge{background:var(--bl);padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;}
 
 .btn-main{background:var(--or);color:white;border:none;padding:12px 20px;border-radius:50px;font-weight:900;font-size:1rem;cursor:pointer;}
-.btn-main.active{background:var(--gr);}
+.btn-main.active{background:var(--gr);color:#0d1b2a;}
 .btn-sub{background:#334155; color:white; border:none; padding:10px; border-radius:8px; font-weight:700; width:100%; margin-top:10px; cursor:pointer;}
 
-.upload-section{background:var(--card2); border:2px dashed var(--bl); border-radius:var(--r); padding:30px; text-align:center; margin-bottom:20px; cursor:pointer;}
-.upload-section p{font-size:0.9rem; color:var(--bl); font-weight:700; margin-top:10px;}
+.upload-section{background:var(--card2); border:2px dashed var(--bl); border-radius:var(--r); padding:20px; text-align:center; margin-bottom:20px; cursor:pointer;}
 
 .stop-card{background:var(--card2);border-radius:var(--r);padding:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.05);position:relative;}
 .stop-card.active{border:2px solid var(--ye);background:rgba(255,209,102,0.1);}
 .stop-name{font-weight:900;font-size:1.1rem;color:var(--ye);margin-bottom:6px;}
-.child-list{font-size:0.9rem;color:#cbd5e1;line-height:1.4;}
-.geo-info{font-size:0.7rem; color:#94a3b8; margin-top:8px; display: flex; align-items: center; gap: 8px;}
+.child-list{font-size:0.9rem;color:#cbd5e1;line-height:1.4;margin-bottom:8px;}
 
-.edit-panel{background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:10px; display:none;}
-.edit-panel input{background:#0d1b2a; border:1px solid #475569; color:white; padding:5px; border-radius:4px; font-size:0.8rem; width:100px; margin-right:5px;}
+.edit-panel{background:rgba(0,0,0,0.4); padding:15px; border-radius:12px; margin-top:10px; display:none; border:1px solid var(--bl);}
+.edit-panel label{display:block; font-size:0.75rem; color:var(--ye); margin-bottom:4px; margin-top:8px;}
+.edit-panel input, .edit-panel textarea{width:100%; background:#0d1b2a; border:1px solid #475569; color:white; padding:10px; border-radius:8px; font-size:0.85rem;}
+.edit-panel textarea{height:60px; resize: none;}
+
+.btn-group{display:flex; gap:8px; margin-top:15px;}
+.btn-save{flex:2; background:var(--gr); color:#0d1b2a; border:none; padding:12px; border-radius:8px; font-weight:bold;}
+.btn-del{flex:1; background:#ef4444; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold;}
 
 nav{position:fixed;bottom:0;width:100%;max-width:500px;left:50%;transform:translateX(-50%);background:var(--card);display:flex;border-top:1px solid rgba(255,255,255,0.1);z-index:100;}
-nav button{flex:1;background:none;border:none;padding:15px;color:rgba(255,255,255,0.5);font-weight:700;}
+nav button{flex:1;background:none;border:none;padding:15px;color:rgba(255,255,255,0.5);font-weight:700;font-size:0.9rem;}
 nav button.active{color:var(--ye);}
 
 .input-group{margin-bottom:15px;}
@@ -49,31 +53,32 @@ nav button.active{color:var(--ye);}
 </head>
 <body>
 
-<header><h1>🚌 승하차 도우미 (위치 수정형)</h1></header>
+<header><h1>🚌 승하차 도우미</h1></header>
 
 <div class="container" id="main-view">
     <div class="info-card">
         <div class="info-row">
             <div>
                 <div id="disp-day" class="day-badge">-</div>
-                <div id="disp-mode" style="margin-top:5px; font-weight:700; color:var(--ye);">파일을 먼저 올려주세요</div>
+                <div id="disp-mode" style="margin-top:5px; font-weight:700; color:var(--ye);">데이터 대기 중</div>
             </div>
             <button id="track-btn" onclick="toggleTracking()" class="btn-main">운행 시작</button>
         </div>
         <div id="gps-status" style="margin-top:10px; font-size:0.75rem; color:rgba(255,255,255,0.5);">GPS 대기 중...</div>
     </div>
     <div id="station-list"></div>
+    <button onclick="addNewStop()" class="btn-sub" style="background:var(--bl); margin-top:20px; padding:15px;">➕ 새 정류장 직접 추가</button>
 </div>
 
 <div class="container" id="config-view" style="display:none;">
     <div class="upload-section" onclick="document.getElementById('csv-file').click()">
-        <span style="font-size:2rem;">📁</span>
-        <p>여기를 눌러 CSV 파일 선택</p>
+        <span style="font-size:1.5rem;">📁 CSV 파일 업로드</span>
+        <p style="font-size:0.8rem; color:var(--bl); margin-top:5px;">기존 데이터를 덮어씁니다.</p>
         <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleFile(event)">
     </div>
 
     <div style="background:var(--card); padding:15px; border-radius:12px;">
-        <h3 style="margin-bottom:15px; font-size:1rem; color:var(--ye);">📢 음성 안내 설정</h3>
+        <h3 style="margin-bottom:15px; font-size:1rem; color:var(--ye);">📢 시스템 설정</h3>
         <div class="input-group">
             <label>🗣️ 성우 선택</label>
             <select id="voice-select"></select>
@@ -82,16 +87,15 @@ nav button.active{color:var(--ye);}
             <label>📍 인식 반경 (미터)</label>
             <input type="number" id="cfg-radius" value="80">
         </div>
-        <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:15px;">* 멘트를 2번 반복하며, 동일 정류장은 2시간 동안 재안내하지 않습니다.</div>
         <button onclick="saveConfig()" class="btn-main" style="width:100%; border-radius:10px;">설정 저장</button>
-        
-        <button onclick="resetAnnounceLog()" class="btn-sub">🔄 안내 기록 초기화 (지금 즉시 안내 가능)</button>
+        <button onclick="resetAnnounceLog()" class="btn-sub">🔄 오늘 안내 기록 초기화</button>
+        <button onclick="clearAllData()" class="btn-sub" style="background:#475569;">⚠️ 모든 데이터 삭제</button>
     </div>
 </div>
 
 <nav>
-    <button onclick="showTab('main')" id="tab-main" class="active">🏠 운행</button>
-    <button onclick="showTab('config')" id="tab-config">⚙️ 업로드</button>
+    <button onclick="showTab('main')" id="tab-main" class="active">🏠 정류장 목록</button>
+    <button onclick="showTab('config')" id="tab-config">⚙️ 설정/업로드</button>
 </nav>
 
 <script>
@@ -107,12 +111,12 @@ function init() {
     const saved = localStorage.getItem('bus_stations_csv');
     if(saved) {
         stations = JSON.parse(saved);
-        renderMain();
     }
     const savedCfg = localStorage.getItem('bus_config_v4');
     if(savedCfg) config = {...config, ...JSON.parse(savedCfg)};
     
     document.getElementById('cfg-radius').value = config.radius;
+    renderMain();
     loadVoices();
     updateInfo();
 }
@@ -143,24 +147,33 @@ function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
         for(let i=1; i<lines.length; i++) {
-            if(!lines[i].trim()) continue;
-            const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-            const clean = (s) => s ? s.replace(/^"|"$/g, '').trim() : "";
+            let line = lines[i].trim();
+            if(!line) continue;
+            const cols = [];
+            let current = '';
+            let inQuotes = false;
+            for(let j=0; j<line.length; j++) {
+                const char = line[j];
+                if(char === '"') inQuotes = !inQuotes;
+                else if(char === ',' && !inQuotes) { cols.push(current.trim()); current = ''; }
+                else current += char;
+            }
+            cols.push(current.trim());
             if(cols.length >= 3) {
                 rows.push({
-                    name: clean(cols[0]), lat: parseFloat(clean(cols[1])), lng: parseFloat(clean(cols[2])),
-                    morning: clean(cols[3]), mon: clean(cols[4]), tue: clean(cols[5]), 
-                    wed: clean(cols[6]), thu: clean(cols[7]), fri: clean(cols[8])
+                    name: cols[0], lat: parseFloat(cols[1]), lng: parseFloat(cols[2]),
+                    morning: cols[3] || "", mon: cols[4] || "", tue: cols[5] || "", 
+                    wed: cols[6] || "", thu: cols[7] || "", fri: cols[8] || ""
                 });
             }
         }
         if(rows.length > 0) {
             stations = rows;
             saveStations();
-            alert(rows.length + "개의 정류장을 불러왔습니다!");
+            alert("성공적으로 불러왔습니다.");
             renderMain(); showTab('main');
         }
-    } catch(err) { alert("파일 읽기 오류"); }
+    } catch(err) { alert("CSV 파싱 오류"); }
 }
 
 function saveStations() {
@@ -171,6 +184,12 @@ function renderMain() {
     const list = document.getElementById('station-list');
     list.innerHTML = '';
     const isMorning = new Date().getHours() < 12;
+    
+    if(stations.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:40px; color:#64748b;">등록된 정류장이 없습니다.</div>';
+        return;
+    }
+
     stations.forEach((s, i) => {
         const names = getNames(s);
         const card = document.createElement('div');
@@ -182,14 +201,34 @@ function renderMain() {
                 <span style="color:var(--bl); font-weight:700;">${isMorning ? '⬆️ 승차' : '⬇️ 하차'}:</span> 
                 ${names || '대상자 없음'}
             </div>
-            <div class="geo-info">
-                <span>📍 위도: ${s.lat.toFixed(6)} / 경도: ${s.lng.toFixed(6)}</span>
-                <button onclick="toggleEdit(${i})" style="color:var(--ye); background:none; border:none; text-decoration:underline; font-size:0.7rem; cursor:pointer;">위치 수정</button>
-            </div>
+            <div style="font-size:0.7rem; color:#94a3b8;">📍 ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}</div>
+            
+            <button onclick="toggleEdit(${i})" style="margin-top:10px; color:var(--ye); background:none; border:none; text-decoration:underline; font-size:0.8rem; cursor:pointer;">상세 정보 수정/삭제</button>
+
             <div id="edit-${i}" class="edit-panel">
-                <input type="number" id="lat-${i}" step="0.000001" value="${s.lat}">
-                <input type="number" id="lng-${i}" step="0.000001" value="${s.lng}">
-                <button onclick="updateLocation(${i})" style="background:var(--gr); color:black; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem;">저장</button>
+                <label>정류장 이름</label>
+                <input type="text" id="en-${i}" value="${s.name}">
+                
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;"><label>위도</label><input type="number" id="elat-${i}" step="0.000001" value="${s.lat}"></div>
+                    <div style="flex:1;"><label>경도</label><input type="number" id="elng-${i}" step="0.000001" value="${s.lng}"></div>
+                </div>
+
+                <label>오전 승차자 (매일)</label>
+                <textarea id="emorn-${i}">${s.morning}</textarea>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <div><label>월 하차</label><input id="emon-${i}" value="${s.mon}"></div>
+                    <div><label>화 하차</label><input id="etue-${i}" value="${s.tue}"></div>
+                    <div><label>수 하차</label><input id="ewed-${i}" value="${s.wed}"></div>
+                    <div><label>목 하차</label><input id="ethu-${i}" value="${s.thu}"></div>
+                    <div style="grid-column: span 2;"><label>금 하차</label><input id="efri-${i}" value="${s.fri}"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-save" onclick="updateStation(${i})">변경사항 저장</button>
+                    <button class="btn-del" onclick="deleteStation(${i})">삭제</button>
+                </div>
             </div>
             <button onclick="manualSpeak(${i})" style="position:absolute; right:15px; top:15px; background:none; border:none; font-size:1.3rem;">🔊</button>
         `;
@@ -198,24 +237,43 @@ function renderMain() {
 }
 
 function toggleEdit(i) {
-    const panel = document.getElementById(`edit-${i}`);
-    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    const p = document.getElementById(`edit-${i}`);
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
 }
 
-function updateLocation(i) {
-    const newLat = parseFloat(document.getElementById(`lat-${i}`).value);
-    const newLng = parseFloat(document.getElementById(`lng-${i}`).value);
-    
-    if(isNaN(newLat) || isNaN(newLng)) {
-        alert("올바른 숫자를 입력해주세요.");
-        return;
-    }
-    
-    stations[i].lat = newLat;
-    stations[i].lng = newLng;
+function updateStation(i) {
+    stations[i] = {
+        name: document.getElementById(`en-${i}`).value,
+        lat: parseFloat(document.getElementById(`elat-${i}`).value),
+        lng: parseFloat(document.getElementById(`elng-${i}`).value),
+        morning: document.getElementById(`emorn-${i}`).value,
+        mon: document.getElementById(`emon-${i}`).value,
+        tue: document.getElementById(`etue-${i}`).value,
+        wed: document.getElementById(`ewed-${i}`).value,
+        thu: document.getElementById(`ethu-${i}`).value,
+        fri: document.getElementById(`efri-${i}`).value
+    };
     saveStations();
-    alert("위치 정보가 수정되었습니다.");
+    alert("수정되었습니다.");
     renderMain();
+}
+
+function deleteStation(i) {
+    if(confirm("정말로 이 정류장을 삭제하시겠습니까?")) {
+        stations.splice(i, 1);
+        saveStations();
+        renderMain();
+    }
+}
+
+function addNewStop() {
+    stations.push({
+        name: "새 정류장", lat: 37.0, lng: 127.0,
+        morning: "", mon: "", tue: "", wed: "", thu: "", fri: ""
+    });
+    renderMain();
+    toggleEdit(stations.length - 1);
+    document.getElementById(`edit-${stations.length-1}`).scrollIntoView({behavior:'smooth'});
 }
 
 function getNames(s) {
@@ -229,35 +287,25 @@ function getNames(s) {
 function speak(idx, isRepeat = false) {
     const now = Date.now();
     const s = stations[idx];
-    
     if (isSpeaking && !isRepeat) return; 
-    
     if (!isRepeat) {
         const lastTime = announcedLog[s.name] || 0;
         if ((now - lastTime) < 7200000) return; 
         announcedLog[s.name] = now;
     }
-
     const names = getNames(s);
     let txt = `이번 정류장은 ${s.name} 입니다. `;
     if(names) txt += `${new Date().getHours()<12?'승차할':'하차할'} 어린이는 ${names} 입니다.`;
-    
     isSpeaking = true;
-
     const ut = new SpeechSynthesisUtterance(txt);
     ut.lang = 'ko-KR';
-    const v = synth.getVoices().find(v => v.name === document.getElementById('voice-select').value);
+    const v = synth.getVoices().find(v => v.name === config.voiceName);
     if(v) ut.voice = v;
-    
     ut.onend = function() {
-        if (!isRepeat) {
-            setTimeout(() => speak(idx, true), 1000);
-        } else {
-            isSpeaking = false;
-        }
+        if (!isRepeat) setTimeout(() => speak(idx, true), 1200);
+        else isSpeaking = false;
     };
     ut.onerror = function() { isSpeaking = false; };
-    
     if(!isRepeat) synth.cancel();
     synth.speak(ut);
 }
@@ -275,12 +323,20 @@ function resetAnnounceLog() {
     alert("안내 기록이 초기화되었습니다.");
 }
 
+function clearAllData() {
+    if(confirm("모든 정류장 데이터가 삭제됩니다. 계속하시겠습니까?")) {
+        stations = [];
+        saveStations();
+        renderMain();
+    }
+}
+
 function toggleTracking() {
     const btn = document.getElementById('track-btn');
     if(!isTracking) {
+        if(stations.length === 0) { alert("먼저 정류장 데이터를 등록해주세요."); return; }
         isTracking = true; btn.innerText = "중지"; btn.classList.add('active');
         watchId = navigator.geolocation.watchPosition(checkPos, (err) => {
-            console.error(err);
             document.getElementById('gps-status').innerText = "GPS 오류: " + err.message;
         }, {enableHighAccuracy:true});
     } else {
@@ -294,13 +350,9 @@ function checkPos(pos) {
     const uLng = pos.coords.longitude;
     const radius = parseInt(document.getElementById('cfg-radius').value) || 80;
     document.getElementById('gps-status').innerText = `수신 중 (오차: ${Math.round(pos.coords.accuracy)}m)`;
-
     stations.forEach((s, i) => {
         const dist = getDist(uLat, uLng, s.lat, s.lng);
-        if(dist < radius) {
-            highlight(i); 
-            speak(i);
-        }
+        if(dist < radius) { highlight(i); speak(i); }
     });
 }
 
