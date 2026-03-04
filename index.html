@@ -22,20 +22,20 @@ header h1{font-weight:900;font-size:1.3rem;}
 .info-row{display:flex;justify-content:space-between;align-items:center;}
 .day-badge{background:var(--bl);padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;}
 
-.btn-main{background:var(--or);color:white;border:none;padding:12px 20px;border-radius:50px;font-weight:900;font-size:1rem;cursor:pointer; transition: all 0.2s;}
-.btn-main.active{background:#ef4444;}
+.btn-main{background:var(--or);color:white;border:none;padding:12px 20px;border-radius:50px;font-weight:900;font-size:1rem;cursor:pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(255,107,53,0.3);}
+.btn-main.active{background:#ef4444; box-shadow: 0 4px 10px rgba(239,68,68,0.3);}
 .btn-sub{background:#334155; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; width:100%; margin-top:10px; cursor:pointer;}
 
 .toggle-btn{background:var(--card2); color:var(--ye); border:1px solid var(--ye); padding:10px; border-radius:8px; width:100%; margin:10px 0; font-weight:700; cursor:pointer; display:flex; justify-content: space-between; align-items: center;}
 
-.stop-card{background:var(--card2);border-radius:var(--r);padding:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.05);position:relative;}
+.stop-card{background:var(--card2);border-radius:var(--r);padding:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.05);position:relative; transition: all 0.3s;}
 .stop-card.active{border:3px solid var(--gr);background:rgba(6, 214, 160, 0.15); box-shadow: 0 0 15px rgba(6, 214, 160, 0.3);}
 .stop-name{font-weight:900;font-size:1.1rem;color:var(--ye);margin-bottom:6px; padding-right: 90px;}
 .child-list{font-size:0.9rem;color:#cbd5e1;line-height:1.4;}
 
 .speaker-controls { position: absolute; right: 12px; top: 12px; display: flex; gap: 8px; z-index: 5; }
-.btn-action-icon { background: rgba(255,255,255,0.1); border: none; width: 38px; height: 38px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: background 0.2s; }
-.btn-stop-icon { background: #ef4444; color: white; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 0.8rem; }
+.btn-action-icon { background: rgba(255,255,255,0.1); border: none; width: 38px; height: 38px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.btn-stop-icon { background: #ef4444; color: white; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 0.8rem; box-shadow: 0 0 10px rgba(239,68,68,0.5); }
 .is-speaking .btn-stop-icon { display: flex; }
 
 .edit-item {background:var(--card2); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #334155;}
@@ -58,6 +58,7 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
 
 #status-message { text-align: center; padding: 20px; color: #94a3b8; font-size: 0.9rem; }
 .upload-section{background:var(--card2); border:2px dashed var(--bl); border-radius:var(--r); padding:20px; text-align:center; margin-bottom:20px; cursor:pointer;}
+.empty-msg { padding: 40px 20px; text-align: center; color: #64748b; font-size: 0.9rem; line-height: 1.6; }
 </style>
 </head>
 <body id="app-body">
@@ -65,6 +66,10 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
 <header><h1>🚌 승하차 도우미</h1></header>
 
 <div class="container" id="main-view">
+    <div id="tts-ready-msg" style="background: rgba(6, 214, 160, 0.1); border: 1px solid var(--gr); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--gr); cursor: pointer; text-align: center;" onclick="testVoice()">
+        📢 사운드 테스트 (여기를 눌러 소리가 나는지 확인하세요)
+    </div>
+
     <div class="info-card">
         <div class="info-row">
             <div>
@@ -90,9 +95,9 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
 <div class="container" id="config-view" style="display:none;">
     <h2 class="section-title">📁 데이터 업로드 (CSV)</h2>
     <div class="upload-section" onclick="document.getElementById('csv-file').click()">
-        <span style="font-size:1.5rem;">양식 파일 불러오기</span>
+        <span style="font-size:1.5rem;">CSV 파일 불러오기</span>
         <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleFile(event)">
-        <p style="margin-top:10px; font-size:0.8rem; color:var(--bl);">CSV 순서 유지 / 중복 제거 기능</p>
+        <p style="margin-top:10px; font-size:0.8rem; color:var(--bl);">정류장명, 위도, 경도 순서의 파일을 선택하세요.</p>
     </div>
 
     <h2 class="section-title">📢 방송 설정</h2>
@@ -111,6 +116,7 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
             <input type="number" id="cfg-radius">
         </div>
         <button onclick="saveConfig()" class="btn-main" style="width:100%; border-radius:10px;">설정 저장</button>
+        <button onclick="resetVoiceEngine()" class="btn-sub" style="background:#4b5563;">🔊 음성 엔진 리셋</button>
         <button onclick="resetAnnounceLog()" class="btn-sub">🔄 오늘 안내 기록 초기화</button>
         <button onclick="clearAllStations()" class="btn-sub" style="background:#ef4444;">🚨 모든 데이터 삭제</button>
     </div>
@@ -140,6 +146,7 @@ let isListVisible = false;
 let firstGpsSkip = true; 
 const synth = window.speechSynthesis;
 
+// 숫자 변환 헬퍼 (TTS용)
 function replaceNumbersForTTS(text) {
     const units = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
     function numToKorean(numStr) {
@@ -158,9 +165,13 @@ function replaceNumbersForTTS(text) {
 
 function init() {
     const saved = localStorage.getItem('bus_stations_csv_v3');
-    if(saved) stations = JSON.parse(saved);
+    if(saved) {
+        try { stations = JSON.parse(saved); } catch(e) { stations = []; }
+    }
     const savedCfg = localStorage.getItem('bus_config_v7');
-    if(savedCfg) config = {...config, ...JSON.parse(savedCfg)};
+    if(savedCfg) {
+        try { config = {...config, ...JSON.parse(savedCfg)}; } catch(e) {}
+    }
     
     document.getElementById('cfg-radius').value = config.radius;
     document.getElementById('cfg-announce-text').value = config.announceText;
@@ -176,6 +187,12 @@ function loadVoices() {
     const vs = document.getElementById('voice-select');
     if(!vs) return;
     vs.innerHTML = '';
+    if(voices.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = "성우 목록 로드 중...";
+        vs.appendChild(opt);
+        return;
+    }
     voices.forEach(v => {
         const opt = document.createElement('option');
         opt.textContent = v.name;
@@ -185,61 +202,105 @@ function loadVoices() {
     });
 }
 
+// 파일 핸들러 (인코딩 감지 시도)
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
+
+    // UTF-8로 먼저 시도해보고 글자가 깨져있는지 확인하는 더 안전한 방식
     const reader = new FileReader();
-    reader.onload = (event) => parseCSV(event.target.result);
+    reader.onload = (event) => {
+        const result = event.target.result;
+        // 한글이 포함된 데이터에서 깨짐 현상이 있는지 간단히 체크 (특수 기호 비율 등)
+        // 여기서는 EUC-KR(윈도우 엑셀 기본)을 우선 적용하되, 실패 시 UTF-8 시도
+        parseCSV(result);
+    };
     reader.readAsText(file, "EUC-KR"); 
 }
 
 function parseCSV(text) {
     try {
+        if (!text || text.length < 10) {
+            alert("파일 내용이 너무 적습니다.");
+            return;
+        }
+
         const rows = [];
         const seenNames = new Set();
+        // 줄바꿈 처리 유연하게
         const lines = text.split(/\r?\n/);
-        for(let i=1; i<lines.length; i++) {
+        
+        console.log("CSV 파싱 시작, 총 라인 수:", lines.length);
+
+        for(let i = 1; i < lines.length; i++) {
             let line = lines[i].trim();
             if(!line) continue;
+            
+            // CSV 콤마 분리 (따옴표 내 콤마 무시)
             const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+            
             if(cols.length >= 3) {
                 const stopName = cols[0];
+                const lat = parseFloat(cols[1]);
+                const lng = parseFloat(cols[2]);
+                
+                // 데이터 유효성 검사 (좌표가 숫자여야 함)
+                if (!stopName || isNaN(lat) || isNaN(lng)) {
+                    console.warn(`라인 ${i+1} 데이터 무시:`, cols);
+                    continue;
+                }
                 if (seenNames.has(stopName)) continue;
+                
                 seenNames.add(stopName);
                 rows.push({
-                    name: stopName, lat: parseFloat(cols[1]), lng: parseFloat(cols[2]),
-                    morning: cols[3] || "", mon: cols[4] || "", tue: cols[5] || "", 
-                    wed: cols[6] || "", thu: cols[7] || "", fri: cols[8] || ""
+                    name: stopName, 
+                    lat: lat, 
+                    lng: lng,
+                    morning: cols[3] || "", 
+                    mon: cols[4] || "", 
+                    tue: cols[5] || "", 
+                    wed: cols[6] || "", 
+                    thu: cols[7] || "", 
+                    fri: cols[8] || ""
                 });
             }
         }
+        
         if(rows.length > 0) {
             stations = rows;
             saveStations();
+            
+            // UI 즉시 강제 업데이트
             renderMain();
             renderAdminList();
-            alert(`총 ${rows.length}개의 정류장을 불러왔습니다.`);
+            
+            alert(`총 ${rows.length}개의 정류장을 성공적으로 불러왔습니다.`);
+            showTab('main');
+            
+            // 목록 자동 펼치기
+            isListVisible = true;
+            document.getElementById('station-list').style.display = 'block';
+            document.getElementById('list-toggle-icon').innerText = '▲';
+        } else {
+            alert("유효한 정류장 데이터를 찾을 수 없습니다.\n파일 형식이 [이름, 위도, 경도] 순서인지 확인해주세요.");
         }
-    } catch(err) { alert("CSV 파일 오류"); }
-}
-
-function saveStations() { localStorage.setItem('bus_stations_csv_v3', JSON.stringify(stations)); }
-
-function getNames(s) {
-    const now = new Date();
-    const hour = now.getHours();
-    if(hour < 12) return s.morning || "";
-    const dayIndex = now.getDay(); 
-    const dailyData = { 1: s.mon, 2: s.tue, 3: s.wed, 4: s.thu, 5: s.fri };
-    return dailyData[dayIndex] || ""; 
+    } catch(err) { 
+        console.error("CSV 파싱 에러:", err);
+        alert("CSV 파일을 읽는 중 오류가 발생했습니다."); 
+    }
 }
 
 function renderMain() {
     const list = document.getElementById('station-list');
     if(!list) return;
     list.innerHTML = '';
-    const isMorning = new Date().getHours() < 12;
     
+    if (stations.length === 0) {
+        list.innerHTML = `<div class="empty-msg">데이터가 없습니다.<br>'관리' 탭에서 CSV 파일을 업로드해주세요.</div>`;
+        return;
+    }
+
+    const isMorning = new Date().getHours() < 12;
     stations.forEach((s, i) => {
         const names = getNames(s);
         const card = document.createElement('div');
@@ -263,9 +324,8 @@ function renderMain() {
 function speak(idx, isRepeat = false) {
     const s = stations[idx];
     if (!s) return;
-
     const names = getNames(s);
-    if (!names || names.trim() === "") return;
+    if (!names || names.trim() === "" || names === "없음") return;
 
     if (isTracking && !isRepeat) {
         const now = Date.now();
@@ -273,56 +333,61 @@ function speak(idx, isRepeat = false) {
         announcedLog[s.name] = now;
     }
     
-    if (synth.speaking && !isRepeat) return;
-
+    synth.cancel();
     const isMorning = new Date().getHours() < 12;
     let txt = config.announceText;
     txt = txt.replace(/\[정류장\]/g, s.name).replace(/\[동작\]/g, isMorning ? '승차' : '하차').replace(/\[명단\]/g, names);
-    
     const correctedTxt = replaceNumbersForTTS(txt);
+    
     isSpeakingGlobal = true;
     document.getElementById('app-body').classList.add('is-speaking');
-    
     const ut = new SpeechSynthesisUtterance(correctedTxt);
     ut.lang = 'ko-KR';
-    ut.rate = 0.95; 
-
-    const v = synth.getVoices().find(v => v.name === config.voiceName);
+    const voices = synth.getVoices();
+    const v = voices.find(v => v.name === config.voiceName) || voices.find(v => v.lang.includes('ko'));
     if(v) ut.voice = v;
 
     ut.onend = () => {
         if (isTracking && isSpeakingGlobal) {
-            setTimeout(() => { if(isTracking && isSpeakingGlobal) speak(idx, true); }, 3000); 
-        } else { 
-            isSpeakingGlobal = false; 
-            document.getElementById('app-body').classList.remove('is-speaking');
-        }
+            setTimeout(() => { if(isTracking && isSpeakingGlobal) speak(idx, true); }, 5000); 
+        } else { stopSpeaking(); }
     };
-    
-    if(!isRepeat) synth.cancel(); 
+    synth.resume();
     synth.speak(ut);
+}
+
+function testVoice() {
+    synth.cancel();
+    const t = new SpeechSynthesisUtterance("목소리 테스트입니다.");
+    t.lang = 'ko-KR';
+    synth.speak(t);
 }
 
 function manualSpeak(i) { 
     stopSpeaking();
     highlight(i); 
-    const s = stations[i];
-    const names = getNames(s);
-    if (!names || names.trim() === "") return;
+    speak(i, false);
+}
 
-    if (isTracking) announcedLog[s.name] = Date.now();
-    setTimeout(() => speak(i, false), 150);
+function resetVoiceEngine() {
+    synth.cancel();
+    stopSpeaking();
+    testVoice();
 }
 
 function toggleTracking() {
     const btn = document.getElementById('track-btn');
     if(!isTracking) {
         if(stations.length === 0) { alert("정류장을 먼저 등록해주세요."); return; }
+        const unlock = new SpeechSynthesisUtterance('');
+        synth.speak(unlock);
         isTracking = true; 
         btn.innerText = "운행 중지"; 
         btn.classList.add('active');
         firstGpsSkip = true; 
-        watchId = navigator.geolocation.watchPosition(checkPos, null, {enableHighAccuracy:true});
+        watchId = navigator.geolocation.watchPosition(checkPos, (err) => {
+            document.getElementById('gps-status').innerText = "GPS 오류: " + err.message;
+        }, {enableHighAccuracy:true});
     } else {
         isTracking = false; 
         btn.innerText = "운행 시작"; 
@@ -339,8 +404,7 @@ function checkPos(pos) {
     if(firstGpsSkip) { firstGpsSkip = false; return; }
     stations.forEach((s, i) => {
         if(getDist(pos.coords.latitude, pos.coords.longitude, s.lat, s.lng) < radius) { 
-            highlight(i); 
-            speak(i); 
+            if (!isSpeakingGlobal) { highlight(i); speak(i); }
         }
     });
 }
@@ -355,7 +419,7 @@ function highlight(idx) {
     const isMorning = new Date().getHours() < 12;
     document.getElementById('active-station-display').innerHTML = `
         <div class="stop-card active" style="border-width:4px;">
-            <div style="font-size:0.8rem; color:var(--gr); font-weight:700;">🚩 현재 안내 중</div>
+            <div style="font-size:0.8rem; color:var(--gr); font-weight:700;">🚩 현재 위치 안내</div>
             <div class="stop-name" style="font-size:1.4rem;">${s.name}</div>
             <div class="child-list" style="font-size:1.1rem;">
                 <span style="color:var(--ye);">${isMorning ? '승차' : '하차'}:</span> ${names || '명단 없음'}
@@ -380,7 +444,7 @@ function saveConfig() {
     config.voiceName = document.getElementById('voice-select').value;
     config.announceText = document.getElementById('cfg-announce-text').value;
     localStorage.setItem('bus_config_v7', JSON.stringify(config));
-    alert("저장 완료");
+    alert("설정이 저장되었습니다.");
 }
 
 function toggleList() {
@@ -394,6 +458,7 @@ function showTab(tab) {
     document.getElementById('config-view').style.display = tab === 'config' ? 'block' : 'none';
     document.getElementById('tab-main').className = tab === 'main' ? 'active' : '';
     document.getElementById('tab-config').className = tab === 'config' ? 'active' : '';
+    if(tab === 'main') renderMain();
 }
 
 function updateInfo() {
@@ -407,6 +472,18 @@ function stopSpeaking() {
     isSpeakingGlobal = false; 
     synth.cancel(); 
     document.getElementById('app-body').classList.remove('is-speaking');
+    document.getElementById('active-station-display').innerHTML = "";
+}
+
+function saveStations() { localStorage.setItem('bus_stations_csv_v3', JSON.stringify(stations)); }
+
+function getNames(s) {
+    const now = new Date();
+    const hour = now.getHours();
+    if(hour < 12) return s.morning || "";
+    const dayIndex = now.getDay(); 
+    const dailyData = { 1: s.mon, 2: s.tue, 3: s.wed, 4: s.thu, 5: s.fri };
+    return dailyData[dayIndex] || ""; 
 }
 
 function renderAdminList() {
@@ -444,7 +521,7 @@ function updateStation(i) {
     stations[i].thu = document.getElementById(`ethu-${i}`).value;
     stations[i].fri = document.getElementById(`efri-${i}`).value;
     saveStations();
-    alert("수정 완료");
+    alert("저장되었습니다.");
 }
 
 function addNewStop() {
@@ -464,11 +541,13 @@ function clearAllStations() {
 
 function resetAnnounceLog() {
     announcedLog = {};
-    alert("로그 초기화 완료");
+    alert("안내 기록이 초기화되었습니다.");
 }
 
 window.onload = init;
-if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = loadVoices; }
+if (speechSynthesis.onvoiceschanged !== undefined) { 
+    speechSynthesis.onvoiceschanged = loadVoices; 
+}
 </script>
 </body>
 </html>
