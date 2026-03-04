@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>🚌 창의나라 유치원 통학버스 자동 방송</title>
+<title>🚌 유치원 통학버스 도우미</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
 :root{
@@ -24,26 +24,25 @@ header h1{font-weight:900;font-size:1.3rem;}
 
 .btn-main{background:var(--or);color:white;border:none;padding:12px 20px;border-radius:50px;font-weight:900;font-size:1rem;cursor:pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(255,107,53,0.3);}
 .btn-main.active{background:#ef4444; box-shadow: 0 4px 10px rgba(239,68,68,0.3);}
-.btn-sub{background:#334155; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; width:100%; margin-top:10px; cursor:pointer;}
+.btn-sub{background:#334155; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; width:100%; cursor:pointer;}
 
 .toggle-btn{background:var(--card2); color:var(--ye); border:1px solid var(--ye); padding:10px; border-radius:8px; width:100%; margin:10px 0; font-weight:700; cursor:pointer; display:flex; justify-content: space-between; align-items: center;}
 
 .stop-card{background:var(--card2);border-radius:var(--r);padding:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.05);position:relative; transition: all 0.3s;}
 .stop-card.active{border:3px solid var(--gr);background:rgba(6, 214, 160, 0.15); box-shadow: 0 0 15px rgba(6, 214, 160, 0.3);}
 .stop-name{font-weight:900;font-size:1.1rem;color:var(--ye);margin-bottom:6px; padding-right: 90px;}
-.child-list{font-size:0.9rem;color:#cbd5e1;line-height:1.4;}
+.child-list{font-size:0.9rem;color:#cbd5e1;line-height:1.4; min-height: 1.4em;}
+.custom-msg-display { font-size: 0.85rem; color: var(--gr); margin-top: 6px; font-weight: 500; background: rgba(6, 214, 160, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; }
 
 .speaker-controls { position: absolute; right: 12px; top: 12px; display: flex; gap: 8px; z-index: 5; }
 .btn-action-icon { background: rgba(255,255,255,0.1); border: none; width: 38px; height: 38px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.btn-stop-icon { background: #ef4444; color: white; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 0.8rem; box-shadow: 0 0 10px rgba(239,68,68,0.5); }
-.is-speaking .btn-stop-icon { display: flex; }
 
 .edit-item {background:var(--card2); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #334155;}
 .edit-item label{display:block; font-size:0.75rem; color:var(--ye); margin-bottom:4px; margin-top:8px; font-weight:bold;}
 .edit-item input, .edit-item textarea{width:100%; background:#0d1b2a; border:1px solid #475569; color:white; padding:10px; border-radius:8px; font-size:0.85rem;}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-.btn-save{display:block; width:100%; background:var(--gr); color:#0d1b2a; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:15px;}
-.btn-geo{background:var(--bl); color:white; border:none; padding:8px; border-radius:6px; font-size:0.75rem; margin-top:5px; width:100%; font-weight:bold; cursor:pointer;}
+.btn-save-sm{background:var(--gr); color:#0d1b2a; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 15px; font-size: 0.9rem;}
 
 nav{position:fixed;bottom:0;width:100%;max-width:500px;left:50%;transform:translateX(-50%);background:var(--card);display:flex;border-top:1px solid rgba(255,255,255,0.1);z-index:100;}
 nav button{flex:1;background:none;border:none;padding:15px;color:rgba(255,255,255,0.5);font-weight:700;font-size:0.9rem;}
@@ -51,367 +50,467 @@ nav button.active{color:var(--ye);}
 
 .input-group{margin-bottom:15px;}
 .input-group label{display:block;font-size:0.8rem;color:var(--ye);margin-bottom:5px;}
-.input-group input, .input-group select, .input-group textarea{width:100%;background:#0d1b2a;border:1px solid #334155;padding:10px;border-radius:8px;color:white;}
+.input-group input, .input-group textarea{width:100%;background:#0d1b2a;border:1px solid #334155;padding:10px;border-radius:8px;color:white;}
 
 h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; border-left:4px solid var(--or); padding-left:10px;}
-
-#status-message { text-align: center; padding: 20px; color: #94a3b8; font-size: 0.9rem; }
 .upload-section{background:var(--card2); border:2px dashed var(--bl); border-radius:var(--r); padding:20px; text-align:center; margin-bottom:20px; cursor:pointer;}
+
+.reset-zone { margin-top: 10px; border-top: 1px dashed #334155; padding-top: 15px; }
 </style>
 </head>
-<body id="app-body">
+<body>
 
-<header><h1>🚌 창의나리 승하차 자동방송</h1></header>
+<header><h1>🚌 승하차 도우미</h1></header>
 
 <div class="container" id="main-view">
     <div class="info-card">
         <div class="info-row">
             <div>
-                <div id="disp-day" class="day-badge">-</div>
-                <div id="disp-mode" style="margin-top:5px; font-weight:700; color:var(--ye);">데이터 대기 중</div>
+                <div id="disp-day" class="day-badge">-요일</div>
+                <div id="disp-mode" style="margin-top:5px; font-weight:700; color:var(--ye);">데이터 로딩 중...</div>
             </div>
-            <button id="track-btn" onclick="toggleTracking()" class="btn-main">운행 시작</button>
+            <button id="track-btn" class="btn-main">운행 시작</button>
         </div>
         <div id="gps-status" style="margin-top:10px; font-size:0.75rem; color:rgba(255,255,255,0.5);">GPS 대기 중...</div>
     </div>
 
+    <!-- 현재 활성화된(인식된) 정류장 크게 보기 -->
     <div id="active-station-display"></div>
 
-    <button class="toggle-btn" onclick="toggleList()">
-        <span>📍 전체 정류장 목록 보기</span>
+    <button class="toggle-btn" id="list-toggle-btn">
+        <span>📍 전체 정류장 목록</span>
         <span id="list-toggle-icon">▼</span>
     </button>
     
     <div id="station-list" style="display:none;"></div>
-    <div id="status-message">운행을 시작하면 자동으로 안내됩니다.</div>
+    <div id="status-message" style="text-align:center; padding:20px; color:#94a3b8; font-size:0.9rem;">CSV를 먼저 업로드하고 운행을 시작하세요.</div>
 </div>
 
 <div class="container" id="config-view" style="display:none;">
-    <h2 class="section-title">📁 데이터 업로드 (CSV)</h2>
-    <div class="upload-section" onclick="document.getElementById('csv-file').click()">
-        <span style="font-size:1.5rem;">CSV 파일 불러오기</span>
-        <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleFile(event)">
-        <p style="margin-top:10px; font-size:0.8rem; color:var(--bl);">정류장명, 위도, 경도 순서</p>
+    <h2 class="section-title">📁 데이터 업데이트 (CSV)</h2>
+    <div class="upload-section" id="upload-box">
+        <span style="font-size:1.2rem; font-weight:bold;">새 CSV 파일 선택</span>
+        <input type="file" id="csv-file" accept=".csv" style="display:none">
+        <p style="margin-top:10px; font-size:0.8rem; color:var(--bl);">엑셀 CSV(EUC-KR) 형식을 권장합니다.</p>
     </div>
 
-    <h2 class="section-title">📢 방송 및 거리 설정</h2>
+    <h2 class="section-title">📢 공통 기본 설정</h2>
     <div style="background:var(--card); padding:15px; border-radius:12px; margin-bottom:20px;">
         <div class="input-group">
-            <label>🗣️ 안내 문구</label>
+            <label>🗣️ 기본 안내 문구 ( [정류장] 부분이 자동 치환됩니다 )</label>
             <textarea id="cfg-announce-text" style="height:60px;"></textarea>
         </div>
-        <div class="input-group" style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
+        <div class="grid-2">
+            <div class="input-group">
                 <label>📍 인식 반경 (m)</label>
                 <input type="number" id="cfg-radius">
             </div>
-            <div style="flex: 1;">
-                <label>⏱️ 대기 시간 (분)</label>
+            <div class="input-group">
+                <label>⏱️ 재안내 제한 (분)</label>
                 <input type="number" id="cfg-wait-time">
             </div>
         </div>
-        <button onclick="saveConfig()" class="btn-main" style="width:100%; border-radius:10px;">설정 저장</button>
+        <button id="save-global-btn" class="btn-main" style="width:100%; border-radius:10px;">전체 설정 저장</button>
+        
+        <div class="reset-zone">
+            <button id="reset-data-btn" class="btn-sub" style="background:#450a0a; color:#f87171; border:1px solid #991b1b;">⚠️ 모든 데이터 초기화 (CSV 포함)</button>
+        </div>
     </div>
 
-    <h2 class="section-title">📍 정류장 좌표 관리</h2>
+    <h2 class="section-title">📍 정류장별 상세 관리</h2>
     <div id="admin-station-list"></div>
-    <button onclick="addNewStop()" class="btn-sub" style="background:var(--bl); margin:20px 0; padding:15px;">➕ 새 정류장 추가</button>
 </div>
 
 <nav>
-    <button onclick="showTab('main')" id="tab-main" class="active">🏠 운행</button>
-    <button onclick="showTab('config')" id="tab-config">⚙️ 관리</button>
+    <button id="tab-btn-main" class="active">🏠 운행</button>
+    <button id="tab-btn-config">⚙️ 관리</button>
 </nav>
 
 <script>
+// 전역 변수 초기화
 let stations = [];
-let config = { 
-    radius: 80, 
-    voiceName: "", 
-    announceText: "이번 정류장은 [정류장] 입니다. [명단] 어린이 [동작] 준비하세요.",
-    waitTime: 25 
-};
+let config = { radius: 80, announceText: "이번 정류장은 [정류장]입니다.", waitTime: 25 };
 let isTracking = false;
 let watchId = null;
-let lastLat = 0, lastLng = 0; // 현재 버스 위치 캐싱
-let announcedLog = {}; // { "정류장명": { lastTime: 0, count: 0 } }
+let announcedLog = {};
 let isSpeakingGlobal = false;
 let isListVisible = false;
-let gpsStableCount = 0;
-const GPS_MIN_STABLE = 3; 
 
 const synth = window.speechSynthesis;
-let wakeLock = null;
+const DB_KEY = 'bus_helper_data_v1';
+const CFG_KEY = 'bus_helper_config_v1';
 
+// 초기화 함수
 function init() {
-    const saved = localStorage.getItem('bus_stations_csv_v3');
-    if(saved) { try { stations = JSON.parse(saved); } catch(e) { stations = []; } }
+    console.log("App Init Start");
     
-    const savedCfg = localStorage.getItem('bus_config_v8');
-    if(savedCfg) { try { config = {...config, ...JSON.parse(savedCfg)}; } catch(e) {} }
-    
+    // 1. 데이터 불러오기
+    try {
+        const saved = localStorage.getItem(DB_KEY);
+        if(saved) stations = JSON.parse(saved);
+        
+        const savedCfg = localStorage.getItem(CFG_KEY);
+        if(savedCfg) config = {...config, ...JSON.parse(savedCfg)};
+    } catch(e) {
+        console.error("Storage load error", e);
+    }
+
+    // 2. UI 초기값 세팅
     document.getElementById('cfg-radius').value = config.radius;
     document.getElementById('cfg-announce-text').value = config.announceText;
     document.getElementById('cfg-wait-time').value = config.waitTime;
+
+    // 3. 모든 버튼 이벤트 리스너 수동 연결 (오작동 방지)
+    document.getElementById('save-global-btn').onclick = saveGlobalConfig;
+    document.getElementById('reset-data-btn').onclick = clearAllData;
+    document.getElementById('track-btn').onclick = toggleTracking;
+    document.getElementById('list-toggle-btn').onclick = toggleList;
+    document.getElementById('tab-btn-main').onclick = () => showTab('main');
+    document.getElementById('tab-btn-config').onclick = () => showTab('config');
     
-    renderMain();
-    renderAdminList();
+    const csvFile = document.getElementById('csv-file');
+    csvFile.onchange = handleFile;
+    document.getElementById('upload-box').onclick = () => csvFile.click();
+
     updateInfo();
+    renderMain();
 }
 
+// 텍스트 클리닝 (CSV의 따옴표 등 제거)
+function cleanText(val) {
+    if (!val) return "";
+    return String(val).trim().replace(/^"|"$/g, '').replace(/""/g, '"');
+}
+
+// 현재 시간에 맞는 명단 가져오기
+function getChildList(station) {
+    if (!station) return "";
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); 
+    if(day === 0 || day === 6) return "주말 운행 없음";
+    
+    let names = (hour < 12) ? station.morning : [null, station.mon, station.tue, station.wed, station.thu, station.fri, null][day];
+    return cleanText(names);
+}
+
+// CSV 파일 핸들러
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
-        const text = event.target.result;
-        parseCSV(text);
-    };
-    reader.readAsText(file, "EUC-KR"); 
+    reader.onload = (event) => parseCSV(event.target.result);
+    reader.readAsText(file, "EUC-KR"); // 엑셀 호환을 위해 EUC-KR 사용
 }
 
+// CSV 파싱
 function parseCSV(text) {
-    const rows = [];
     const lines = text.split(/\r?\n/);
+    const newRows = [];
+    const backupCustom = {};
+    
+    // 기존에 직접 입력했던 개별 안내문구 백업
+    stations.forEach(s => { if(s.customAnnounce) backupCustom[s.name] = s.customAnnounce; });
+
     for(let i = 1; i < lines.length; i++) {
         let line = lines[i].trim();
         if(!line) continue;
-        const cols = line.split(',').map(c => c.trim());
-        if(cols.length >= 3) {
-            rows.push({
-                name: cols[0], lat: parseFloat(cols[1]), lng: parseFloat(cols[2]),
-                morning: cols[3] || "", mon: cols[4] || ""
+        
+        const cols = [];
+        let cur = "", inQ = false;
+        for(let char of line) {
+            if(char === '"') inQ = !inQ;
+            else if(char === ',' && !inQ) { cols.push(cur); cur = ""; }
+            else cur += char;
+        }
+        cols.push(cur);
+
+        const sName = cleanText(cols[0]);
+        if(sName && !isNaN(parseFloat(cols[1]))) {
+            newRows.push({
+                name: sName,
+                lat: parseFloat(cols[1]),
+                lng: parseFloat(cols[2]),
+                morning: cols[3] || "",
+                mon: cols[4] || "", 
+                tue: cols[5] || "", 
+                wed: cols[6] || "", 
+                thu: cols[7] || "", 
+                fri: cols[8] || "",
+                customAnnounce: backupCustom[sName] || ""
             });
         }
     }
-    if(rows.length > 0) {
-        stations = rows;
-        saveStations();
+
+    if(newRows.length > 0) {
+        stations = newRows;
+        saveToLocalStorage();
         renderMain();
-        renderAdminList();
-        alert(`로드 완료`);
+        alert(stations.length + "개의 정류장이 성공적으로 등록되었습니다.");
+        showTab('main');
+    } else {
+        alert("CSV 형식을 확인해주세요. (정류장명, 위도, 경도 순서)");
     }
 }
 
+// 메인 화면 리스트 렌더링
 function renderMain() {
     const list = document.getElementById('station-list');
+    const msg = document.getElementById('status-message');
+    if(!list) return;
+
     list.innerHTML = '';
-    const isMorning = new Date().getHours() < 12;
+    if(stations.length === 0) {
+        msg.style.display = 'block';
+        return;
+    }
+    msg.style.display = 'none';
+
     stations.forEach((s, i) => {
-        const names = isMorning ? s.morning : s.mon;
+        const names = getChildList(s);
         const card = document.createElement('div');
-        card.id = `card-${i}`;
         card.className = 'stop-card';
+        card.id = `card-${i}`;
         card.innerHTML = `
             <div class="stop-name">${s.name}</div>
-            <div class="child-list">${names || '없음'}</div>
+            <div class="child-list">${names || '<span style="color:gray;">명단 없음</span>'}</div>
+            ${s.customAnnounce ? `<div class="custom-msg-display">📢 ${s.customAnnounce}</div>` : ''}
             <div class="speaker-controls">
                 <button onclick="manualSpeak(${i})" class="btn-action-icon">🔊</button>
-                <button onclick="stopSpeaking()" class="btn-stop-icon">■</button>
             </div>
         `;
         list.appendChild(card);
     });
 }
 
+// 관리자 화면 리스트 렌더링
 function renderAdminList() {
     const list = document.getElementById('admin-station-list');
+    if(!list) return;
     list.innerHTML = '';
+    
+    if(stations.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:30px; color:#64748b;">등록된 데이터가 없습니다.</div>';
+        return;
+    }
+
     stations.forEach((s, i) => {
         const item = document.createElement('div');
         item.className = 'edit-item';
         item.innerHTML = `
-            <label>정류장명</label>
+            <label>📍 정류장명</label>
             <input type="text" id="edit-name-${i}" value="${s.name}">
             
-            <div style="display:flex; gap:10px; margin-top:8px;">
-                <div style="flex:1">
-                    <label>위도(Lat)</label>
-                    <input type="number" step="any" id="edit-lat-${i}" value="${s.lat}">
-                </div>
-                <div style="flex:1">
-                    <label>경도(Lng)</label>
-                    <input type="number" step="any" id="edit-lng-${i}" value="${s.lng}">
-                </div>
+            <div class="grid-2">
+                <div><label>☀️ 오전 명단</label><textarea id="edit-morning-${i}">${s.morning || ''}</textarea></div>
+                <div><label>📅 월요일</label><textarea id="edit-mon-${i}">${s.mon || ''}</textarea></div>
+                <div><label>📅 화요일</label><textarea id="edit-tue-${i}">${s.tue || ''}</textarea></div>
+                <div><label>📅 수요일</label><textarea id="edit-wed-${i}">${s.wed || ''}</textarea></div>
+                <div><label>📅 목요일</label><textarea id="edit-thu-${i}">${s.thu || ''}</textarea></div>
+                <div><label>📅 금요일</label><textarea id="edit-fri-${i}">${s.fri || ''}</textarea></div>
             </div>
+
+            <label>🗣️ 개별 추가 안내 문구</label>
+            <textarea id="edit-custom-${i}" placeholder="이 정류장에서만 나올 멘트">${s.customAnnounce || ''}</textarea>
             
-            <button class="btn-geo" onclick="setCurrentLocation(${i})">📍 현재 버스 위치로 좌표 자동 설정</button>
-            
-            <label style="color:var(--gr); margin-top:10px;">☀️ 오전 승차 명단</label>
-            <textarea id="edit-morn-${i}">${s.morning || ""}</textarea>
-            
-            <label style="color:var(--ye);">🌙 오후 하차 명단</label>
-            <textarea id="edit-aft-${i}">${s.mon || ""}</textarea>
-            
-            <button class="btn-save" onclick="updateStation(${i})">변경사항 저장</button>
+            <button class="btn-save-sm" onclick="saveIndividual(${i})">💾 정류장 수정사항 저장</button>
         `;
         list.appendChild(item);
     });
 }
 
-function setCurrentLocation(i) {
-    if (lastLat === 0 || lastLng === 0) {
-        alert("운행 시작을 누른 후 GPS 좌표가 수신되어야 현재 위치를 가져올 수 있습니다.");
-        return;
-    }
-    document.getElementById(`edit-lat-${i}`).value = lastLat.toFixed(7);
-    document.getElementById(`edit-lng-${i}`).value = lastLng.toFixed(7);
-    alert(`${stations[i].name}의 좌표를 현재 위치로 입력했습니다. '변경사항 저장'을 꼭 눌러주세요.`);
-}
-
-function updateStation(i) {
-    stations[i].name = document.getElementById(`edit-name-${i}`).value;
-    stations[i].lat = parseFloat(document.getElementById(`edit-lat-${i}`).value);
-    stations[i].lng = parseFloat(document.getElementById(`edit-lng-${i}`).value);
-    stations[i].morning = document.getElementById(`edit-morn-${i}`).value;
-    stations[i].mon = document.getElementById(`edit-aft-${i}`).value;
-    saveStations();
+// 개별 정류장 저장
+function saveIndividual(i) {
+    stations[i].name = document.getElementById(`edit-name-${i}`).value.trim();
+    stations[i].morning = document.getElementById(`edit-morning-${i}`).value.trim();
+    stations[i].mon = document.getElementById(`edit-mon-${i}`).value.trim();
+    stations[i].tue = document.getElementById(`edit-tue-${i}`).value.trim();
+    stations[i].wed = document.getElementById(`edit-wed-${i}`).value.trim();
+    stations[i].thu = document.getElementById(`edit-thu-${i}`).value.trim();
+    stations[i].fri = document.getElementById(`edit-fri-${i}`).value.trim();
+    stations[i].customAnnounce = document.getElementById(`edit-custom-${i}`).value.trim();
+    
+    saveToLocalStorage();
+    alert(`[${stations[i].name}] 정보가 저장되었습니다.`);
     renderMain();
-    alert("저장되었습니다.");
 }
 
-function speak(idx, isAuto = false, isRepeat = false) {
-    const s = stations[idx];
-    const names = (new Date().getHours() < 12) ? s.morning : s.mon;
-    if (!names || names.trim() === "") return;
+// 전체 설정 저장
+function saveGlobalConfig() {
+    config.radius = parseInt(document.getElementById('cfg-radius').value) || 80;
+    config.announceText = document.getElementById('cfg-announce-text').value;
+    config.waitTime = parseInt(document.getElementById('cfg-wait-time').value) || 25;
+    
+    localStorage.setItem(CFG_KEY, JSON.stringify(config));
+    alert("공통 설정이 저장되었습니다.");
+}
 
-    const now = Date.now();
-    const waitMs = (parseInt(config.waitTime) || 25) * 60 * 1000;
+// 모든 데이터 초기화
+function clearAllData() {
+    if(confirm("⚠️ 경고!\n\n현재 등록된 모든 정류장과 명단이 삭제됩니다.\n초기화하시겠습니까?")) {
+        stations = [];
+        announcedLog = {};
+        localStorage.removeItem(DB_KEY);
+        
+        // UI 즉시 갱신
+        renderMain();
+        renderAdminList();
+        document.getElementById('active-station-display').innerHTML = "";
+        
+        if(isTracking) toggleTracking(); // 운행 중이면 중지
+        
+        alert("모든 데이터가 삭제되었습니다.");
+    }
+}
+
+function saveToLocalStorage() {
+    localStorage.setItem(DB_KEY, JSON.stringify(stations));
+}
+
+// 음성 안내 실행
+function speak(idx, isAuto = false) {
+    const s = stations[idx];
+    const names = getChildList(s);
+    if (!names && !s.customAnnounce) return;
 
     if (isAuto) {
-        const log = announcedLog[s.name] || { lastTime: 0, count: 0 };
-        if ((now - log.lastTime) < waitMs) return;
-
-        if (!isRepeat) {
-            log.count = 1;
-            log.lastTime = now;
-            announcedLog[s.name] = log;
-        } else {
-            log.count = 2;
-            announcedLog[s.name] = log;
-        }
+        const now = Date.now();
+        const last = announcedLog[s.name] || 0;
+        if (now - last < config.waitTime * 60000) return; // 재안내 제한
+        announcedLog[s.name] = now;
     }
-    
-    synth.cancel();
-    let txt = config.announceText.replace(/\[정류장\]/g, s.name)
-                .replace(/\[동작\]/g, (new Date().getHours() < 12) ? '승차' : '하차')
-                .replace(/\[명단\]/g, names);
-    
-    isSpeakingGlobal = true;
-    document.getElementById('app-body').classList.add('is-speaking');
-    const ut = new SpeechSynthesisUtterance(txt);
+
+    synth.cancel(); // 진행 중인 음성 취소
+    let text = config.announceText.replace(/\[정류장\]/g, s.name);
+    if(names) text += ` 명단은 ${names}입니다. `;
+    if(s.customAnnounce) text += ` ${s.customAnnounce}`;
+
+    const ut = new SpeechSynthesisUtterance(text);
     ut.lang = 'ko-KR';
-    ut.onend = () => {
-        if (isAuto && !isRepeat && isSpeakingGlobal) {
-            setTimeout(() => { if(isTracking && isSpeakingGlobal) speak(idx, true, true); }, 4000); 
-        } else {
-            stopSpeaking();
-        }
-    };
+    ut.rate = 0.95; // 약간 천천히
+    ut.onstart = () => { isSpeakingGlobal = true; };
+    ut.onend = () => { isSpeakingGlobal = false; };
     synth.speak(ut);
 }
 
-function manualSpeak(i) { stopSpeaking(); highlight(i); speak(i, false); }
-
-function stopSpeaking() { 
-    isSpeakingGlobal = false; 
-    synth.cancel(); 
-    document.getElementById('app-body').classList.remove('is-speaking');
+// 수동 스피커 아이콘 클릭 시
+function manualSpeak(i) { 
+    highlight(i); 
+    speak(i, false); 
 }
 
-function toggleTracking() {
-    const btn = document.getElementById('track-btn');
-    if(!isTracking) {
-        isTracking = true; 
-        gpsStableCount = 0; 
-        btn.innerText = "운행 중지"; 
-        btn.classList.add('active');
-        watchId = navigator.geolocation.watchPosition(checkPos, null, {enableHighAccuracy:true});
-    } else {
-        isTracking = false; 
-        btn.innerText = "운행 시작"; 
-        btn.classList.remove('active');
-        if(watchId) navigator.geolocation.clearWatch(watchId);
-    }
-}
-
-function checkPos(pos) {
-    lastLat = pos.coords.latitude;
-    lastLng = pos.coords.longitude;
-    document.getElementById('gps-status').innerText = `수신 중 (오차: ±${Math.round(pos.coords.accuracy)}m)`;
-
-    if (gpsStableCount < GPS_MIN_STABLE) { gpsStableCount++; return; }
-    if (pos.coords.accuracy > 80) return;
-
-    const radius = parseInt(config.radius) || 80;
-    stations.forEach((s, i) => {
-        if(getDist(lastLat, lastLng, s.lat, s.lng) < radius) { 
-            if (!isSpeakingGlobal) { highlight(i); speak(i, true); }
-        }
-    });
-}
-
+// 화면상 정류장 강조 및 상단 표시
 function highlight(idx) {
     document.querySelectorAll('.stop-card').forEach(c => c.classList.remove('active'));
     const target = document.getElementById(`card-${idx}`);
-    if(target) target.classList.add('active');
+    if(target) {
+        target.classList.add('active');
+        if(!isListVisible) toggleList();
+        target.scrollIntoView({behavior:'smooth', block:'center'});
+    }
     
     const s = stations[idx];
-    const isMorning = new Date().getHours() < 12;
     document.getElementById('active-station-display').innerHTML = `
-        <div class="stop-card active" style="border-width:4px;">
-            <div class="stop-name" style="font-size:1.3rem;">${s.name}</div>
-            <div class="child-list">${isMorning ? s.morning : s.mon}</div>
+        <div class="stop-card active" style="border-width:4px; margin-top:10px; animation: bounce 0.5s;">
+            <div style="font-size:0.8rem; color:var(--gr); font-weight:bold; margin-bottom:5px;">현재 정류장 인식됨</div>
+            <div class="stop-name" style="font-size:1.4rem;">${s.name}</div>
+            <div class="child-list" style="font-size:1.1rem; color:white;">${getChildList(s) || '명단 없음'}</div>
+            ${s.customAnnounce ? `<div class="custom-msg-display" style="font-size:1rem;">📢 ${s.customAnnounce}</div>` : ''}
         </div>
     `;
 }
 
+// 실시간 GPS 추적 토글
+function toggleTracking() {
+    const btn = document.getElementById('track-btn');
+    if(!isTracking) {
+        if(stations.length === 0) { alert("먼저 CSV 데이터를 업로드해주세요."); return; }
+        
+        // 위치 권한 요청 및 시작
+        isTracking = true;
+        btn.innerText = "운행 중지"; btn.classList.add('active');
+        
+        watchId = navigator.geolocation.watchPosition(pos => {
+            const {latitude: lat, longitude: lng, accuracy} = pos.coords;
+            document.getElementById('gps-status').innerText = `수신 중 (정확도: ±${Math.round(accuracy)}m)`;
+            
+            stations.forEach((s, i) => {
+                const dist = getDist(lat, lng, s.lat, s.lng);
+                if(dist < config.radius) {
+                    if(!isSpeakingGlobal) { 
+                        highlight(i); 
+                        speak(i, true); 
+                    }
+                }
+            });
+        }, err => {
+            document.getElementById('gps-status').innerText = "GPS 오류: " + err.message;
+            isTracking = false;
+            btn.innerText = "운행 시작"; btn.classList.remove('active');
+        }, {enableHighAccuracy: true, timeout: 10000, maximumAge: 0});
+    } else {
+        isTracking = false;
+        btn.innerText = "운행 시작"; btn.classList.remove('active');
+        navigator.geolocation.clearWatch(watchId);
+        document.getElementById('gps-status').innerText = "운행 중지됨";
+    }
+}
+
+// 거리 계산 (Haversine Formula)
 function getDist(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
-    const p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180;
-    const dp = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
-    const a = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    const dLat = (lat2-lat1)*Math.PI/180;
+    const dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function saveConfig() {
-    config.radius = document.getElementById('cfg-radius').value;
-    config.announceText = document.getElementById('cfg-announce-text').value;
-    config.waitTime = document.getElementById('cfg-wait-time').value;
-    localStorage.setItem('bus_config_v8', JSON.stringify(config));
-    alert("설정 저장됨");
-}
-
-function saveStations() { localStorage.setItem('bus_stations_csv_v3', JSON.stringify(stations)); }
-
+// 전체 목록 접기/펴기
 function toggleList() {
     isListVisible = !isListVisible;
     document.getElementById('station-list').style.display = isListVisible ? 'block' : 'none';
+    document.getElementById('list-toggle-icon').innerText = isListVisible ? '▲' : '▼';
 }
 
+// 탭 전환
 function showTab(tab) {
-    document.getElementById('main-view').style.display = tab === 'main' ? 'block' : 'none';
-    document.getElementById('config-view').style.display = tab === 'config' ? 'block' : 'none';
-    document.getElementById('tab-main').className = tab === 'main' ? 'active' : '';
-    document.getElementById('tab-config').className = tab === 'config' ? 'active' : '';
+    const mainView = document.getElementById('main-view');
+    const configView = document.getElementById('config-view');
+    const tabMain = document.getElementById('tab-btn-main');
+    const tabConfig = document.getElementById('tab-btn-config');
+
+    if(tab === 'main') {
+        mainView.style.display = 'block';
+        configView.style.display = 'none';
+        tabMain.classList.add('active');
+        tabConfig.classList.remove('active');
+        renderMain();
+    } else {
+        mainView.style.display = 'none';
+        configView.style.display = 'block';
+        tabMain.classList.remove('active');
+        tabConfig.classList.add('active');
+        renderAdminList();
+    }
 }
 
+// 요일 및 오전/오후 정보 업데이트
 function updateInfo() {
-    const days = ['일','월','화','수','목','금','토'];
+    const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
     const now = new Date();
-    document.getElementById('disp-day').innerText = days[now.getDay()] + "요일";
-    document.getElementById('disp-mode').innerText = now.getHours() < 12 ? "☀️ 오전 승차" : "🌙 오후 하차";
+    document.getElementById('disp-day').innerText = days[now.getDay()];
+    document.getElementById('disp-mode').innerText = now.getHours() < 12 ? "☀️ 오전 등원 명단 적용" : "🌙 오후 하차 명단 적용";
 }
 
-function addNewStop() {
-    stations.push({name: "새 정류장", lat: lastLat || 37.0, lng: lastLng || 127.0, morning: "", mon: ""});
-    renderAdminList();
-    renderMain();
-}
-
-window.onload = init;
+// 페이지 로드 시 시작
+window.addEventListener('load', init);
 </script>
+
+<style>
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+</style>
 </body>
 </html>
-
-
