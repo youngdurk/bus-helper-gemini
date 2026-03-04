@@ -18,40 +18,26 @@ header h1{font-weight:900;font-size:1.5rem;letter-spacing:-1px;}
 
 .container{max-width:500px;margin:0 auto;padding:15px;}
 
-/* 운행 정보 카드 */
 .info-card{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:15px;border-left:5px solid var(--ye);box-shadow:0 10px 20px rgba(0,0,0,0.2);}
 .info-row{display:flex;justify-content:space-between;align-items:center;}
 .day-badge{background:var(--bl);padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:700;}
 
-/* 버튼 스타일 */
 .btn-main{background:var(--or);color:white;border:none;padding:12px 24px;border-radius:50px;font-weight:900;font-size:1rem;box-shadow:0 5px 15px rgba(255,107,53,0.4);cursor:pointer;transition:0.2s;}
 .btn-main.active{background:var(--gr);box-shadow:0 5px 15px rgba(6,214,160,0.4);}
 .btn-danger{background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:0.8rem; font-weight:700;}
 .btn-add{background:var(--bl); color:white; border:none; padding:15px; border-radius:12px; width:100%; font-weight:900; margin-bottom:20px;}
 .btn-loc{background:#334155; color:var(--ye); border:1px solid var(--ye); padding:6px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; margin-bottom:5px; cursor:pointer;}
 
-/* 정류장 리스트 */
 .stop-card{background:var(--card2);border-radius:var(--r);padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.05);position:relative;transition: 0.3s;}
 .stop-card.active{border:2px solid var(--ye);background:rgba(255,209,102,0.15);transform: scale(1.02);}
 .stop-name{font-weight:900;font-size:1.2rem;color:var(--ye);margin-bottom:8px;}
 .child-list{font-size:0.95rem;color:#cbd5e1;line-height:1.4;}
 
-/* 스위치 스타일 */
-.switch-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--gr); }
-input:checked + .slider:before { transform: translateX(22px); }
-
-/* 설정 탭 */
 .config-panel{background:var(--card);border-radius:var(--r);padding:20px;}
 .input-group{margin-bottom:15px;}
 .input-group label{display:block;font-size:0.8rem;color:var(--ye);margin-bottom:5px;font-weight:700;}
 .input-group input, .input-group textarea, .input-group select{width:100%;background:#0d1b2a;border:1px solid #334155;padding:10px;border-radius:8px;color:white;font-family:inherit;}
 
-/* 하단 내비 */
 nav{position:fixed;bottom:0;width:100%;max-width:500px;left:50%;transform:translateX(-50%);background:var(--card);display:flex;border-top:1px solid rgba(255,255,255,0.1);z-index:100;}
 nav button{flex:1;background:none;border:none;padding:15px;color:rgba(255,255,255,0.5);font-weight:700;font-size:0.8rem;}
 nav button.active{color:var(--ye);}
@@ -100,7 +86,6 @@ nav button.active{color:var(--ye);}
         <div id="gps-status" style="margin-top:15px; font-size:0.8rem; color:rgba(255,255,255,0.5);">GPS 대기 중...</div>
     </div>
 
-    <!-- 전체 공통 메시지 표시 영역 -->
     <div id="global-msg-display" style="display:none; background:rgba(6, 214, 160, 0.1); border:1px dashed var(--gr); padding:10px; border-radius:12px; margin-bottom:15px; font-size:0.85rem; color:var(--gr); text-align:center;">
         📢 공통 알림: <span id="global-msg-text"></span>
     </div>
@@ -120,39 +105,27 @@ nav button.active{color:var(--ye);}
 
         <button onclick="addNewStation()" class="btn-add">+ 새로운 정류장 추가하기</button>
 
-        <!-- 공통 설정 영역 -->
         <div style="background:#0d1b2a; padding:15px; border-radius:12px; margin-bottom:25px; border:1px solid var(--bl);">
             <h3 style="color:var(--bl); font-size:0.9rem; margin-bottom:15px;">🛠️ 공통 음성 안내 설정</h3>
-            
             <div class="input-group">
                 <label>🗣️ 성우(목소리) 선택</label>
-                <select id="voice-select" style="font-size: 0.9rem;"></select>
+                <select id="voice-select"></select>
             </div>
-
             <div class="input-group">
-                <label>💬 시작 멘트 (정류장 이름 앞)</label>
-                <input type="text" id="cfg-prefix" placeholder="예: 이번 정류장은">
+                <label>💬 시작 멘트</label>
+                <input type="text" id="cfg-prefix">
             </div>
-
             <div class="input-group">
-                <label>💬 마지막 멘트 (정류장 이름 뒤)</label>
-                <input type="text" id="cfg-suffix" placeholder="예: 입니다.">
+                <label>💬 마지막 멘트</label>
+                <input type="text" id="cfg-suffix">
             </div>
-
             <div class="input-group">
-                <label>🌐 전체 공통 알림 메시지 (안전벨트 등)</label>
-                <input type="text" id="cfg-global-msg" placeholder="예: 안전벨트를 확인하세요">
-            </div>
-
-            <div class="input-group">
-                <label>📍 GPS 인식 반경 (미터)</label>
+                <label>📍 GPS 인식 반경(m)</label>
                 <input type="number" id="cfg-radius">
             </div>
-            
             <button onclick="saveSystemConfig()" class="btn-save-all">공통 설정 저장</button>
         </div>
 
-        <h3 style="margin-bottom:15px; font-size:1rem; color:var(--ye);">👥 정류장별 명단 상세 수정</h3>
         <div id="edit-station-list"></div>
     </div>
 </div>
@@ -163,24 +136,15 @@ nav button.active{color:var(--ye);}
 </nav>
 
 <script>
-let stations = [
-    {
-        name: "오산대역 세교 자이아파트",
-        lat: 37.166396, lng: 127.06628,
-        morning: "이하람, 이아인",
-        mon: "박지아", tue: "김고은", wed: "김나연", thu: "김시원", fri: "이하람",
-        memo: "정문 차단기 앞에서 정차합니다.",
-        useMemo: true
-    }
+// 업로드해주신 데이터를 미리 내장했습니다.
+const defaultStations = [
+    { name: "오산대역 세교 자이아파트", lat: 37.166396, lng: 127.06628, morning: "", mon: "이하람,이아인,임하준,박지아,원유라,김고은,권해리,김나연,조민석,김시원,김강민", tue: "이하람,이아인,임하준,박지아,원유라,김고은,김나연,조민석,김시원", wed: "이하람,이아인,임하준,박지아,원유라,김고은,권해리,조민석,김시원", thu: "이하람,이아인,임하준,박지아,원유라,김고은,조민석,김시원", fri: "이하람,이아인,임하준,박지아,원유라,권해리,김강민", memo: "" },
+    { name: "6단지 아파트", lat: 37.167233, lng: 127.06628, morning: "", mon: "신하민,신하진,윤나은,윤채은,이단비", tue: "신하민,신하진,윤나은,윤채은,이단비", wed: "신하민,신하진,윤나은,윤채은", thu: "신하민,신하진,윤나은,윤채은", fri: "신하민,신하진,윤나은,윤채은,신예환", memo: "" },
+    { name: "5단지 아파트", lat: 37.1685, lng: 127.0675, morning: "", mon: "김태이,김하온", tue: "김태이,김하온", wed: "김태이,김하온", thu: "김태이,김하온", fri: "김태이,김하온", memo: "" }
 ];
 
-let config = { 
-    radius: 150,
-    globalMsg: "",
-    prefix: "이번 정류장은", 
-    suffix: "입니다.",
-    voiceName: ""
-};
+let stations = [];
+let config = { radius: 100, globalMsg: "", prefix: "이번 정류장은", suffix: "입니다.", voiceName: "" };
 
 const synth = window.speechSynthesis;
 let voices = [];
@@ -188,145 +152,46 @@ let isTracking = false;
 let watchId = null;
 let lastAnnounced = null;
 
-function isMorning() {
-    return new Date().getHours() < 12;
-}
+function isMorning() { return new Date().getHours() < 12; }
 
 function init() {
-    const savedStations = localStorage.getItem('bus_stations_v2');
-    if(savedStations) {
-        stations = JSON.parse(savedStations);
-        stations = stations.map(s => ({...s, useMemo: s.useMemo !== undefined ? s.useMemo : true}));
-    }
+    const saved = localStorage.getItem('bus_stations_v3');
+    stations = saved ? JSON.parse(saved) : defaultStations;
     
-    const savedCfg = localStorage.getItem('bus_config_v2');
-    if(savedCfg) {
-        const parsed = JSON.parse(savedCfg);
-        config = { ...config, ...parsed };
-    }
+    const savedCfg = localStorage.getItem('bus_config_v3');
+    if(savedCfg) config = { ...config, ...JSON.parse(savedCfg) };
     
     document.getElementById('cfg-radius').value = config.radius;
-    document.getElementById('cfg-global-msg').value = config.globalMsg || "";
-    document.getElementById('cfg-prefix').value = config.prefix || "";
-    document.getElementById('cfg-suffix').value = config.suffix || "";
+    document.getElementById('cfg-prefix').value = config.prefix;
+    document.getElementById('cfg-suffix').value = config.suffix;
 
-    // 목소리 목록 로드
     loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = loadVoices;
-    }
+    if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = loadVoices; }
 
     updateDisplayInfo();
     renderMainList();
     renderEditList();
-    updateGlobalMsgView();
-
-    navigator.geolocation.getCurrentPosition(()=>{}, null, { enableHighAccuracy: true });
 }
 
 function loadVoices() {
-    voices = synth.getVoices().filter(voice => voice.lang.includes('ko'));
-    const voiceSelect = document.getElementById('voice-select');
-    voiceSelect.innerHTML = '';
-    
-    if (voices.length === 0) {
+    voices = synth.getVoices().filter(v => v.lang.includes('ko'));
+    const vs = document.getElementById('voice-select');
+    vs.innerHTML = '';
+    voices.forEach(v => {
         const opt = document.createElement('option');
-        opt.textContent = "기본 목소리 (지원되는 성우 없음)";
-        voiceSelect.appendChild(opt);
-        return;
-    }
-
-    voices.forEach(voice => {
-        const option = document.createElement('option');
-        option.textContent = `${voice.name} (${voice.lang})`;
-        option.value = voice.name;
-        if (voice.name === config.voiceName) {
-            option.selected = true;
-        }
-        voiceSelect.appendChild(option);
+        opt.textContent = v.name;
+        opt.value = v.name;
+        if (v.name === config.voiceName) opt.selected = true;
+        vs.appendChild(opt);
     });
-}
-
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => parseCSV(e.target.result);
-    reader.readAsText(file, 'EUC-KR');
-}
-
-function parseCSV(csvText) {
-    const rows = csvText.split(/\r?\n/).filter(row => row.trim() !== '');
-    if (rows.length < 2) return alert("데이터 형식을 확인해주세요.");
-    const newStations = [];
-    for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-        if (cols && cols.length >= 9) {
-            const clean = (v) => v ? v.replace(/"/g, '').trim() : '';
-            newStations.push({
-                name: clean(cols[0]), lat: parseFloat(clean(cols[1])), lng: parseFloat(clean(cols[2])),
-                morning: clean(cols[3]), mon: clean(cols[4]), tue: clean(cols[5]),
-                wed: clean(cols[6]), thu: clean(cols[7]), fri: clean(cols[8]), 
-                memo: clean(cols[9]) || "", useMemo: true
-            });
-        }
-    }
-    if (newStations.length > 0 && confirm("데이터를 교체할까요?")) {
-        stations = newStations;
-        saveData();
-    }
-}
-
-function setCurrentLocation(idx) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        stations[idx].lat = lat;
-        stations[idx].lng = lng;
-        document.getElementById(`lat-${idx}`).value = lat.toFixed(6);
-        document.getElementById(`lng-${idx}`).value = lng.toFixed(6);
-        saveData();
-        alert(`"${stations[idx].name}" 위치가 저장되었습니다.`);
-    }, null, { enableHighAccuracy: true });
-}
-
-function addNewStation() {
-    const name = prompt("새 정류장 이름을 입력하세요:");
-    if(!name) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-        addProcess(name, pos.coords.latitude, pos.coords.longitude);
-    }, () => {
-        addProcess(name, 37.5665, 126.9780);
-    }, { enableHighAccuracy: true });
-}
-
-function addProcess(name, lat, lng) {
-    stations.push({
-        name, lat, lng, morning: "", mon: "", tue: "", wed: "", thu: "", fri: "", memo: "", useMemo: true
-    });
-    saveData();
-}
-
-function deleteStation(idx) {
-    if(confirm(`"${stations[idx].name}"을 삭제할까요?`)) {
-        stations.splice(idx, 1);
-        saveData();
-    }
-}
-
-function saveData() {
-    localStorage.setItem('bus_stations_v2', JSON.stringify(stations));
-    renderMainList();
-    renderEditList();
 }
 
 function renderMainList() {
     const list = document.getElementById('station-list');
     list.innerHTML = '';
     const morningMode = isMorning();
-    
     stations.forEach((s, i) => {
-        const names = getNamesForCurrentTime(s);
+        const names = getNamesForCurrentDay(s);
         const card = document.createElement('div');
         card.id = `card-${i}`;
         card.className = 'stop-card';
@@ -334,9 +199,8 @@ function renderMainList() {
             <div class="stop-name">${s.name}</div>
             <div class="child-list">
                 <span style="color:var(--bl); font-weight:700;">${morningMode ? '⬆️ 승차' : '⬇️ 하차'}:</span> 
-                ${names || '대상자 없음'}
+                ${names || '<span style="color:#64748b;">대상자 없음</span>'}
             </div>
-            ${(s.memo && s.useMemo) ? `<div style="font-size:0.8rem; color:var(--gr); margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">📢 ${s.memo}</div>` : ''}
             <button onclick="manualSpeak(${i})" style="position:absolute; right:15px; top:18px; background:none; border:none; font-size:1.5rem;">🔊</button>
         `;
         list.appendChild(card);
@@ -351,110 +215,69 @@ function renderEditList() {
         div.className = 'edit-item';
         div.innerHTML = `
             <div class="edit-item-header">
-                <input type="text" value="${s.name}" onchange="updateStationData(${i}, 'name', this.value)" 
-                       style="background:none; border:none; color:var(--ye); font-weight:900; font-size:1.1rem; width:70%;">
+                <strong>${s.name}</strong>
                 <button onclick="deleteStation(${i})" class="btn-danger">삭제</button>
             </div>
-            
-            <button onclick="setCurrentLocation(${i})" class="btn-loc">📍 현재 위치 좌표로 갱신</button>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-                <div class="input-group"><label>위도</label><input type="number" id="lat-${i}" step="any" value="${s.lat}" onchange="updateStationData(${i}, 'lat', parseFloat(this.value))"></div>
-                <div class="input-group"><label>경도</label><input type="number" id="lng-${i}" step="any" value="${s.lng}" onchange="updateStationData(${i}, 'lng', parseFloat(this.value))"></div>
-            </div>
-
-            <div class="input-group" style="background:rgba(0,0,0,0.2); padding:12px; border-radius:10px; border:1px solid ${s.useMemo ? 'var(--gr)' : '#334155'};">
-                <div class="switch-container">
-                    <label style="color:${s.useMemo ? 'var(--gr)' : '#64748b'}; margin-bottom:0;">📢 정류장 전용 메시지 활성</label>
-                    <label class="switch">
-                        <input type="checkbox" ${s.useMemo ? 'checked' : ''} onchange="updateStationData(${i}, 'useMemo', this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <input type="text" value="${s.memo || ''}" onchange="updateStationData(${i}, 'memo', this.value)" 
-                       placeholder="예: 단지 내 서행하세요 등" style="opacity: ${s.useMemo ? '1' : '0.5'};" ${s.useMemo ? '' : 'disabled'}>
-            </div>
-
-            <div class="input-group" style="margin-top:10px;">
-                <label>☀️ 오전 승차 명단</label>
-                <input type="text" value="${s.morning}" onchange="updateStationData(${i}, 'morning', this.value)">
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                <div class="input-group"><label>월 하차</label><input type="text" value="${s.mon}" onchange="updateStationData(${i}, 'mon', this.value)"></div>
-                <div class="input-group"><label>화 하차</label><input type="text" value="${s.tue}" onchange="updateStationData(${i}, 'tue', this.value)"></div>
-                <div class="input-group"><label>수 하차</label><input type="text" value="${s.wed}" onchange="updateStationData(${i}, 'wed', this.value)"></div>
-                <div class="input-group"><label>목 하차</label><input type="text" value="${s.thu}" onchange="updateStationData(${i}, 'thu', this.value)"></div>
-                <div class="input-group"><label>금 하차</label><input type="text" value="${s.fri}" onchange="updateStationData(${i}, 'fri', this.value)"></div>
-            </div>
+            <div class="input-group"><label>오전 명단</label><input type="text" value="${s.morning||''}" onchange="updateData(${i},'morning',this.value)"></div>
+            <div class="input-group"><label>오후 명단(월)</label><input type="text" value="${s.mon||''}" onchange="updateData(${i},'mon',this.value)"></div>
+            <div class="input-group"><label>오후 명단(화)</label><input type="text" value="${s.tue||''}" onchange="updateData(${i},'tue',this.value)"></div>
+            <div class="input-group"><label>오후 명단(수)</label><input type="text" value="${s.wed||''}" onchange="updateData(${i},'wed',this.value)"></div>
+            <div class="input-group"><label>오후 명단(목)</label><input type="text" value="${s.thu||''}" onchange="updateData(${i},'thu',this.value)"></div>
+            <div class="input-group"><label>오후 명단(금)</label><input type="text" value="${s.fri||''}" onchange="updateData(${i},'fri',this.value)"></div>
         `;
         list.appendChild(div);
     });
 }
 
-function updateStationData(idx, key, val) {
+function updateData(idx, key, val) {
     stations[idx][key] = val;
-    localStorage.setItem('bus_stations_v2', JSON.stringify(stations));
+    localStorage.setItem('bus_stations_v3', JSON.stringify(stations));
     renderMainList();
 }
 
-function getNamesForCurrentTime(s) {
-    const now = new Date();
+function deleteStation(idx) {
+    if(confirm('정말 삭제할까요?')) { stations.splice(idx, 1); saveAll(); }
+}
+
+function saveAll() {
+    localStorage.setItem('bus_stations_v3', JSON.stringify(stations));
+    renderMainList(); renderEditList();
+}
+
+function getNamesForCurrentDay(s) {
     if (isMorning()) return s.morning;
-    switch(now.getDay()) {
-        case 1: return s.mon; case 2: return s.tue; case 3: return s.wed;
-        case 4: return s.thu; case 5: return s.fri; default: return "";
-    }
+    const day = new Date().getDay();
+    const map = [s.sun, s.mon, s.tue, s.wed, s.thu, s.fri, s.sat];
+    return map[day] || "";
 }
 
 function speak(idx) {
     const s = stations[idx];
-    const names = getNamesForCurrentTime(s);
-    const morning = isMorning();
+    const names = getNamesForCurrentDay(s);
+    let txt = `${config.prefix} ${s.name} ${config.suffix}. `;
+    if(names) txt += `${isMorning()?'승차할':'하차할'} 아이는 ${names} 입니다.`;
     
-    let fullText = "";
-    if (config.globalMsg) fullText += `${config.globalMsg}. `;
-    if (config.prefix) fullText += `${config.prefix} `;
-    fullText += `${s.name} `;
-    if (config.suffix) fullText += `${config.suffix} `;
-    if (names) {
-        fullText += `${morning ? '승차하실' : '하차할'} 어린이는 ${names} 입니다. `;
-    }
-    if (s.memo && s.useMemo) {
-        fullText += ` 알림 사항입니다. ${s.memo}. `;
-    }
-
     synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.lang = 'ko-KR';
-    utterance.rate = 0.95;
-
-    // 선택된 성우 적용
-    const selectedVoice = voices.find(v => v.name === config.voiceName);
-    if (selectedVoice) {
-        utterance.voice = selectedVoice;
-    }
-
-    synth.speak(utterance);
+    const ut = new SpeechSynthesisUtterance(txt);
+    ut.lang = 'ko-KR';
+    const v = voices.find(v => v.name === config.voiceName);
+    if(v) ut.voice = v;
+    synth.speak(ut);
 }
 
-function manualSpeak(i) {
-    highlightCard(i);
-    speak(i);
-}
+function manualSpeak(i) { highlightCard(i); speak(i); }
 
 function toggleTracking() {
     const btn = document.getElementById('track-btn');
     if(!isTracking) {
-        isTracking = true;
-        btn.innerText = "운행 중지";
-        btn.classList.add('active');
-        document.getElementById('gps-status').innerText = "📍 자동 안내 가동 중...";
-        watchId = navigator.geolocation.watchPosition(checkPos, null, { enableHighAccuracy: true });
+        if(!navigator.geolocation) return alert("GPS를 지원하지 않는 기기입니다.");
+        isTracking = true; btn.innerText = "운행 중지"; btn.classList.add('active');
+        watchId = navigator.geolocation.watchPosition(checkPos, err => {
+            console.error(err);
+            document.getElementById('gps-status').innerText = "GPS 오류 발생";
+        }, { enableHighAccuracy: true });
     } else {
-        isTracking = false;
-        btn.innerText = "운행 시작";
-        btn.classList.remove('active');
-        document.getElementById('gps-status').innerText = "정지됨";
+        isTracking = false; btn.innerText = "운행 시작"; btn.classList.remove('active');
         navigator.geolocation.clearWatch(watchId);
     }
 }
@@ -462,14 +285,12 @@ function toggleTracking() {
 function checkPos(pos) {
     const uLat = pos.coords.latitude;
     const uLng = pos.coords.longitude;
+    document.getElementById('gps-status').innerText = `수신 중 (정밀도: ${Math.round(pos.coords.accuracy)}m)`;
+
     stations.forEach((s, i) => {
         const dist = getDist(uLat, uLng, s.lat, s.lng);
         if(dist < config.radius) {
-            if(lastAnnounced !== s.name) {
-                highlightCard(i);
-                speak(i);
-                lastAnnounced = s.name;
-            }
+            if(lastAnnounced !== s.name) { highlightCard(i); speak(i); lastAnnounced = s.name; }
         } else if(dist > config.radius * 2 && lastAnnounced === s.name) {
             lastAnnounced = null;
         }
@@ -487,10 +308,8 @@ function highlightCard(idx) {
 
 function getDist(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
-    const p1 = lat1 * Math.PI/180;
-    const p2 = lat2 * Math.PI/180;
-    const dp = (lat2-lat1) * Math.PI/180;
-    const dl = (lon2-lon1) * Math.PI/180;
+    const p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180;
+    const dp = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
     const a = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
@@ -500,44 +319,63 @@ function showTab(tab) {
     document.getElementById('config-view').style.display = tab === 'config' ? 'block' : 'none';
     document.getElementById('tab-main').className = tab === 'main' ? 'active' : '';
     document.getElementById('tab-config').className = tab === 'config' ? 'active' : '';
-    updateDisplayInfo();
 }
 
 function updateDisplayInfo() {
     const days = ['일','월','화','수','목','금','토'];
     const now = new Date();
     document.getElementById('disp-day').innerText = days[now.getDay()] + "요일";
-    const morning = isMorning();
-    document.getElementById('disp-mode').innerText = morning ? "☀️ 오전 승차 모드" : "🌙 오후 하차 모드";
-}
-
-function updateGlobalMsgView() {
-    const box = document.getElementById('global-msg-display');
-    const text = document.getElementById('global-msg-text');
-    if (box && text) {
-        if (config.globalMsg) {
-            box.style.display = "block";
-            text.innerText = config.globalMsg;
-        } else {
-            box.style.display = "none";
-        }
-    }
+    document.getElementById('disp-mode').innerText = isMorning() ? "☀️ 오전 승차 모드" : "🌙 오후 하차 모드";
 }
 
 function saveSystemConfig() {
-    config.radius = parseInt(document.getElementById('cfg-radius').value) || 150;
-    config.globalMsg = document.getElementById('cfg-global-msg').value.trim();
+    config.radius = parseInt(document.getElementById('cfg-radius').value) || 100;
     config.prefix = document.getElementById('cfg-prefix').value.trim();
     config.suffix = document.getElementById('cfg-suffix').value.trim();
     config.voiceName = document.getElementById('voice-select').value;
-    
-    localStorage.setItem('bus_config_v2', JSON.stringify(config));
-    updateGlobalMsgView();
-    alert("시스템 설정 및 성우 선택이 저장되었습니다.");
+    localStorage.setItem('bus_config_v3', JSON.stringify(config));
+    alert("공통 설정이 저장되었습니다.");
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => parseCSV(e.target.result);
+    reader.readAsText(file, 'EUC-KR'); 
+}
+
+function parseCSV(text) {
+    try {
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const newStops = [];
+        for(let i=1; i<lines.length; i++) {
+            const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            if(cols.length >= 3) {
+                const clean = (v) => v ? v.replace(/"/g, '').trim() : '';
+                newStops.push({
+                    name: clean(cols[0]), lat: parseFloat(clean(cols[1])), lng: parseFloat(clean(cols[2])),
+                    morning: clean(cols[3]), mon: clean(cols[4]), tue: clean(cols[5]), 
+                    wed: clean(cols[6]), thu: clean(cols[7]), fri: clean(cols[8]), memo: ""
+                });
+            }
+        }
+        if(newStops.length > 0) {
+            if(confirm(`${newStops.length}개의 정류장을 발견했습니다. 기존 목록을 지우고 바꿀까요?`)) {
+                stations = newStops; saveAll();
+            }
+        }
+    } catch(err) { alert("파일 형식 오류입니다."); }
+}
+
+function addNewStation() {
+    navigator.geolocation.getCurrentPosition(p => {
+        stations.push({name:"새 정류장", lat:p.coords.latitude, lng:p.coords.longitude, morning:"", mon:"", tue:"", wed:"", thu:"", fri:"", memo:""});
+        saveAll();
+    }, () => alert("GPS를 켜주세요."));
 }
 
 window.onload = init;
 </script>
-
 </body>
 </html>
