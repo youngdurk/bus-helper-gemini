@@ -147,6 +147,7 @@ let watchId = null;
 let announcedLog = {};
 let isSpeakingGlobal = false;
 let isListVisible = false;
+let announcementTimeout = null; // 예약된 반복 안내를 취소하기 위한 변수 추가
 
 const synth = window.speechSynthesis;
 const DB_KEY = 'bus_helper_data_v1';
@@ -391,8 +392,17 @@ function clearAllData() {
 
 function saveToLocalStorage() { localStorage.setItem(DB_KEY, JSON.stringify(stations)); }
 
-function stopSpeak() { synth.cancel(); isSpeakingGlobal = false; }
+// 수정됨: 음성 중지 시 예약된 6초 뒤 안내도 함께 취소하도록 변경
+function stopSpeak() { 
+    synth.cancel(); 
+    isSpeakingGlobal = false; 
+    if(announcementTimeout) {
+        clearTimeout(announcementTimeout);
+        announcementTimeout = null;
+    }
+}
 
+// 수정됨: 안내 음성 2회 반복 (6초 인터벌) 로직 적용
 function speak(idx, isAuto = false) {
     const s = stations[idx];
     if (isAuto && !s.useAnnounce) return;
@@ -401,17 +411,29 @@ function speak(idx, isAuto = false) {
         if (now - (announcedLog[s.name] || 0) < config.waitTime * 60000) return;
         announcedLog[s.name] = now;
     }
-    synth.cancel();
+    
+    stopSpeak(); // 이전 음성 및 예약된 음성 모두 중단
+
     let text = config.announceText.replace(/\[정류장\]/g, s.name);
     const names = getChildList(s);
     if(names) text += ` 명단은 ${names}입니다. `;
     if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
 
-    const ut = new SpeechSynthesisUtterance(text);
-    ut.lang = 'ko-KR';
-    ut.onstart = () => isSpeakingGlobal = true;
-    ut.onend = () => isSpeakingGlobal = false;
-    synth.speak(ut);
+    const playProcess = () => {
+        const ut = new SpeechSynthesisUtterance(text);
+        ut.lang = 'ko-KR';
+        ut.onstart = () => isSpeakingGlobal = true;
+        ut.onend = () => isSpeakingGlobal = false;
+        synth.speak(ut);
+    };
+
+    // 1회차 즉시 방송
+    playProcess();
+
+    // 2회차 6초 뒤 방송 (6000ms)
+    announcementTimeout = setTimeout(() => {
+        playProcess();
+    }, 6000);
 }
 
 function manualSpeak(i) { highlight(i); speak(i, false); }
@@ -436,25 +458,44 @@ function highlight(idx) {
     }
 }
 
+// 수정됨: 운행 시작 시 'GPS 대기 중' 문구가 '운행 중'으로 바뀌도록 수정
 function toggleTracking() {
     const btn = document.getElementById('track-btn');
+    const gpsStatus = document.getElementById('gps-status');
+
     if(!isTracking) {
         if(stations.length === 0) return alert("데이터를 먼저 업로드하세요.");
+        
         isTracking = true;
-        btn.innerText = "운행 중지"; btn.classList.add('active');
+        btn.innerText = "운행 중지"; 
+        btn.classList.add('active');
+        gpsStatus.innerText = "📡 GPS 신호 연결 시도 중...";
+
         watchId = navigator.geolocation.watchPosition(pos => {
-            const {latitude: lat, longitude: lng} = pos.coords;
+            const {latitude: lat, longitude: lng, accuracy} = pos.coords;
+            
+            // GPS 상태 업데이트: 신호를 성공적으로 받으면 즉시 표시 변경
+            gpsStatus.innerText = `📡 GPS 수신 중 (정확도: ${Math.round(accuracy)}m)`;
+            gpsStatus.style.color = "var(--gr)";
+
             stations.forEach((s, i) => {
                 if(getDist(lat, lng, s.lat, s.lng) < config.radius) {
                     highlight(i);
                     if(!isSpeakingGlobal) speak(i, true);
                 }
             });
-        }, null, {enableHighAccuracy: true});
+        }, (err) => {
+            gpsStatus.innerText = "❌ GPS 오류: 권한 또는 신호 문제";
+            gpsStatus.style.color = "#ef4444";
+        }, {enableHighAccuracy: true});
     } else {
         isTracking = false;
-        btn.innerText = "운행 시작"; btn.classList.remove('active');
+        btn.innerText = "운행 시작"; 
+        btn.classList.remove('active');
+        gpsStatus.innerText = "GPS 대기 중...";
+        gpsStatus.style.color = "rgba(255,255,255,0.5)";
         navigator.geolocation.clearWatch(watchId);
+        stopSpeak();
     }
 }
 
