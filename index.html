@@ -414,7 +414,7 @@ function speak(idx, isAuto = false) {
 
     let text = config.announceText.replace(/\[정류장\]/g, s.name);
     const names = getChildList(s);
-    if(names) text += ` 명단은 ${names}입니다. `;
+    if(names) text += ` 어린이 이름은  ${names}입니다. `;
     if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
 
     const utterOnce = () => {
@@ -544,3 +544,4 @@ window.onload = init;
 </script>
 </body>
 </html>
+
