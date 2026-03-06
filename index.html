@@ -394,12 +394,11 @@ function stopSpeak() {
     if(announcementTimeout) clearTimeout(announcementTimeout);
 }
 
-// 안내 방송 로직: 명단 안내 문구가 상차/하차 상황에 맞게 유동적으로 변경되도록 수정됨
+// 안내 방송 볼륨 및 출력 설정 최적화
 function speak(idx, isAuto = false) {
     const s = stations[idx];
     if (isAuto && !s.useAnnounce) return;
     
-    // 재안내 제한 확인
     if (isAuto) {
         const now = Date.now();
         const lastTime = announcedLog[s.name] || 0;
@@ -409,30 +408,31 @@ function speak(idx, isAuto = false) {
     
     stopSpeak();
 
-    // 1. 기본 안내 문구 (이번 정류장은 [정류장]입니다)
     let text = config.announceText.replace(/\[정류장\]/g, s.name);
-    
-    // 2. 명단 안내 (명단이 있는 경우에만 상차/하차 상황에 맞춰 문장 추가)
     const names = getChildList(s);
     if(names) {
         const hour = new Date().getHours();
         const actionText = hour < 12 ? "상차 할 어린이는" : "하차 할 어린이는";
         text += ` ${actionText} ${names}입니다. `;
     }
-
-    // 3. 정류장별 개별 안내 문구 추가
     if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
 
     const play = () => {
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'ko-KR';
+        
+        // 볼륨 최대화 설정
+        ut.volume = 1.0;  // 0.0 ~ 1.0 (최대 볼륨)
+        ut.rate = 0.9;    // 속도를 약간 늦춰서 더 또박또박 들리게 함
+        ut.pitch = 1.0;   // 표준 음높이
+        
         ut.onstart = () => { isSpeakingGlobal = true; };
         synth.speak(ut);
     };
 
-    play(); // 1회차 안내
+    play(); 
     announcementTimeout = setTimeout(() => {
-        play(); // 2회차 안내 (6초 뒤)
+        play(); 
         setTimeout(() => { isSpeakingGlobal = false; }, 4000);
     }, 6000);
 }
