@@ -125,6 +125,9 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
         </div>
         <button id="save-global-btn" class="btn-main" style="width:100%; border-radius:10px;">전체 설정 저장</button>
         
+        <!-- 1번 요청: CSV 백업 다운로드 버튼 추가 -->
+        <button id="download-csv-btn" class="btn-sub" style="margin-top:10px; background:var(--bl); color:white;">💾 현재 데이터 CSV로 백업</button>
+
         <div class="reset-zone">
             <button id="reset-data-btn" class="btn-sub" style="background:#450a0a; color:#f87171; border:1px solid #991b1b;">⚠️ 모든 데이터 초기화 (CSV 포함)</button>
         </div>
@@ -173,6 +176,7 @@ function init() {
     document.getElementById('cfg-wait-time').value = config.waitTime;
 
     document.getElementById('save-global-btn').onclick = saveGlobalConfig;
+    document.getElementById('download-csv-btn').onclick = downloadCSV; // 백업 기능 연결
     document.getElementById('reset-data-btn').onclick = clearAllData;
     document.getElementById('track-btn').onclick = toggleTracking;
     document.getElementById('list-toggle-btn').onclick = toggleList;
@@ -256,6 +260,49 @@ function parseCSV(text) {
         alert(stations.length + "개의 정류장이 등록되었습니다.");
         showTab('main');
     }
+}
+
+// 1번 요청: CSV 다운로드 기능 구현
+function downloadCSV() {
+    if (stations.length === 0) {
+        alert("백업할 데이터가 없습니다.");
+        return;
+    }
+    
+    // 헤더 정의
+    let csvContent = "정류장명,위도,경도,오전등원,월요일,화요일,수요일,목요일,금요일\r\n";
+    
+    // 데이터 구성
+    stations.forEach(s => {
+        let row = [
+            `"${s.name}"`,
+            s.lat,
+            s.lng,
+            `"${(s.morning || '').replace(/"/g, '""')}"`,
+            `"${(s.mon || '').replace(/"/g, '""')}"`,
+            `"${(s.tue || '').replace(/"/g, '""')}"`,
+            `"${(s.wed || '').replace(/"/g, '""')}"`,
+            `"${(s.thu || '').replace(/"/g, '""')}"`,
+            `"${(s.fri || '').replace(/"/g, '""')}"`
+        ];
+        csvContent += row.join(",") + "\r\n";
+    });
+
+    // 한글 깨짐 방지를 위한 BOM 처리
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `창의나라_버스명단_백업_${dateStr}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function renderMain() {
@@ -400,7 +447,7 @@ function stopSpeak() {
     }
 }
 
-// ⭐ 안내 음성 반복 로직 수정 (확실한 2회 반복 보장)
+// 2회 반복 안내 로직 (2번 요청 반영)
 function speak(idx, isAuto = false) {
     const s = stations[idx];
     if (isAuto && !s.useAnnounce) return;
@@ -410,31 +457,34 @@ function speak(idx, isAuto = false) {
         announcedLog[s.name] = now;
     }
     
-    stopSpeak(); // 기존 타이머/음성 초기화
+    stopSpeak();
 
     let text = config.announceText.replace(/\[정류장\]/g, s.name);
     const names = getChildList(s);
-    if(names) text += ` 명단은  ${names}입니다. `;
+    const now = new Date();
+    const hour = now.getHours();
+
+    // 2번 요청: 명단이 비어있을 경우 자동 멘트 추가
+    if(names) {
+        text += ` 명단은 ${names}입니다. `;
+    } else {
+        const emptyMsg = hour < 12 ? " 이곳에서 탈 어린이는 없습니다." : " 이곳에서 내릴 어린이는 없습니다.";
+        text += emptyMsg;
+    }
+
     if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
 
     const utterOnce = () => {
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'ko-KR';
         ut.onstart = () => { isSpeakingGlobal = true; };
-        ut.onend = () => { 
-            // 두 번째 안내까지 모두 끝나야 다른 안내가 가능하게 함 (옵션)
-            // isSpeakingGlobal = false; // 이 부분을 지우고 타이머 끝에서 처리
-        };
         synth.speak(ut);
     };
 
-    // 1회차 즉시 실행
-    utterOnce();
+    utterOnce(); // 1회차
 
-    // 2회차 6초 뒤 실행 예약
     announcementTimeout = setTimeout(() => {
-        utterOnce();
-        // 모든 안내가 끝난 것으로 간주 (약 3~4초 뒤 해제)
+        utterOnce(); // 2회차 (6초 뒤)
         setTimeout(() => { isSpeakingGlobal = false; }, 4000);
     }, 6000);
 }
@@ -443,11 +493,15 @@ function manualSpeak(i) { highlight(i); speak(i, false); }
 
 function highlight(idx) {
     const s = stations[idx];
+    const names = getChildList(s);
+    const hour = new Date().getHours();
+    const emptyMsg = hour < 12 ? "탈 어린이가 없습니다." : "내릴 어린이가 없습니다.";
+
     document.getElementById('active-station-display').innerHTML = `
         <div class="stop-card active" style="border-width:4px; margin-top:10px;">
             <div style="font-size:0.8rem; color:var(--gr); font-weight:bold; margin-bottom:5px;">현재 정류장 도착</div>
             <div class="stop-name" style="font-size:1.4rem;">${s.name}</div>
-            <div class="child-list" style="font-size:1.1rem; color:white;">${getChildList(s) || '명단 없음'}</div>
+            <div class="child-list" style="font-size:1.1rem; color:white;">${names || `<span style="color:#f87171;">${emptyMsg}</span>`}</div>
             ${(s.customAnnounce && s.useCustom) ? `<div class="custom-msg-display" style="font-size:1rem;">📢 ${s.customAnnounce}</div>` : ''}
             <div class="speaker-controls">
                 <button onclick="stopSpeak()" class="btn-action-icon stop" style="background:rgba(239, 68, 68, 0.2)">⬛</button>
@@ -461,7 +515,6 @@ function highlight(idx) {
     }
 }
 
-// ⭐ GPS 상태 실시간 업데이트 로직 (유지)
 function toggleTracking() {
     const btn = document.getElementById('track-btn');
     const gpsStatus = document.getElementById('gps-status');
@@ -473,14 +526,11 @@ function toggleTracking() {
         btn.innerText = "운행 중지"; 
         btn.classList.add('active');
         
-        // 클릭 즉시 상태 변경
         gpsStatus.innerText = "📡 GPS 신호 연결 시도 중...";
         gpsStatus.style.color = "var(--ye)";
 
         watchId = navigator.geolocation.watchPosition(pos => {
             const {latitude: lat, longitude: lng, accuracy} = pos.coords;
-            
-            // 수신 성공 시 즉시 정보 표시
             gpsStatus.innerText = `📡 GPS 수신 중 (정확도: ${Math.round(accuracy)}m)`;
             gpsStatus.style.color = "var(--gr)";
 
@@ -502,10 +552,8 @@ function toggleTracking() {
         isTracking = false;
         btn.innerText = "운행 시작"; 
         btn.classList.remove('active');
-        
         gpsStatus.innerText = "GPS 대기 중...";
         gpsStatus.style.color = "rgba(255,255,255,0.5)";
-        
         navigator.geolocation.clearWatch(watchId);
         stopSpeak();
     }
@@ -544,4 +592,3 @@ window.onload = init;
 </script>
 </body>
 </html>
-
