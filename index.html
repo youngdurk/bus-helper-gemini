@@ -394,7 +394,24 @@ function stopSpeak() {
     if(announcementTimeout) clearTimeout(announcementTimeout);
 }
 
-// 안내 방송 볼륨 및 출력 설정 최적화
+// 숫자를 한자어 수사로 변환하는 함수 (11 -> 십일, 12 -> 십이, 2 -> 이 등)
+function convertNumbersToHanja(text) {
+    const units = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+    const tens = ['', '십', '이십', '삼십', '사십', '오십', '육십', '칠십', '팔십', '구십'];
+    
+    return text.replace(/\d+/g, (match) => {
+        let num = parseInt(match);
+        if (num === 0) return '영';
+        if (num < 10) return units[num];
+        if (num < 100) {
+            let t = Math.floor(num / 10);
+            let u = num % 10;
+            return tens[t] + units[u];
+        }
+        return match; // 100 이상은 기본 엔진에 맡김
+    });
+}
+
 function speak(idx, isAuto = false) {
     const s = stations[idx];
     if (isAuto && !s.useAnnounce) return;
@@ -417,14 +434,15 @@ function speak(idx, isAuto = false) {
     }
     if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
 
+    // TTS를 위한 텍스트 보정 (숫자 한자어 변환 적용)
+    const processedText = convertNumbersToHanja(text);
+
     const play = () => {
-        const ut = new SpeechSynthesisUtterance(text);
+        const ut = new SpeechSynthesisUtterance(processedText);
         ut.lang = 'ko-KR';
-        
-        // 볼륨 최대화 설정
-        ut.volume = 1.0;  // 0.0 ~ 1.0 (최대 볼륨)
-        ut.rate = 0.9;    // 속도를 약간 늦춰서 더 또박또박 들리게 함
-        ut.pitch = 1.0;   // 표준 음높이
+        ut.volume = 1.0; 
+        ut.rate = 0.95;  // 전달력 향상을 위해 약간 천천히
+        ut.pitch = 1.0;
         
         ut.onstart = () => { isSpeakingGlobal = true; };
         synth.speak(ut);
