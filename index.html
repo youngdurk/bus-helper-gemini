@@ -394,7 +394,7 @@ function stopSpeak() {
     if(announcementTimeout) clearTimeout(announcementTimeout);
 }
 
-// 안내 방송 로직: 명단이 없을 때 기본 문구만 나오도록 수정됨
+// 안내 방송 로직: 명단 안내 문구가 상차/하차 상황에 맞게 유동적으로 변경되도록 수정됨
 function speak(idx, isAuto = false) {
     const s = stations[idx];
     if (isAuto && !s.useAnnounce) return;
@@ -412,10 +412,12 @@ function speak(idx, isAuto = false) {
     // 1. 기본 안내 문구 (이번 정류장은 [정류장]입니다)
     let text = config.announceText.replace(/\[정류장\]/g, s.name);
     
-    // 2. 명단 안내 (명단이 있는 경우에만 문장 추가)
+    // 2. 명단 안내 (명단이 있는 경우에만 상차/하차 상황에 맞춰 문장 추가)
     const names = getChildList(s);
     if(names) {
-        text += ` 명단은 ${names}입니다. `;
+        const hour = new Date().getHours();
+        const actionText = hour < 12 ? "상차 할 어린이는" : "하차 할 어린이는";
+        text += ` ${actionText} ${names}입니다. `;
     }
 
     // 3. 정류장별 개별 안내 문구 추가
@@ -441,7 +443,7 @@ function highlight(idx) {
     const s = stations[idx];
     const names = getChildList(s);
     const hour = new Date().getHours();
-    const emptyMsg = hour < 12 ? "등원 어린이가 없습니다." : "하차 어린이가 없습니다.";
+    const emptyMsg = hour < 12 ? "상차 할 어린이가 없습니다." : "하차 할 어린이가 없습니다.";
 
     document.getElementById('active-station-display').innerHTML = `
         <div class="stop-card active" style="border-width:4px;">
@@ -517,7 +519,7 @@ function updateInfo() {
     const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
     const now = new Date();
     document.getElementById('disp-day').innerText = days[now.getDay()];
-    document.getElementById('disp-mode').innerText = now.getHours() < 12 ? "☀️ 오전 등원 명단 적용" : "🌙 오후 하차 명단 적용";
+    document.getElementById('disp-mode').innerText = now.getHours() < 12 ? "☀️ 오전 상차 명단 적용" : "🌙 오후 하차 명단 적용";
 }
 
 window.onload = init;
