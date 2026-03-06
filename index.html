@@ -132,7 +132,6 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
 </nav>
 
 <script>
-// --- 전역 변수 및 설정 (기존 유지) ---
 let stations = [];
 let config = { radius: 80, announceText: "이번 정류장은 [정류장]입니다.", waitTime: 25 };
 let isTracking = false;
@@ -170,7 +169,6 @@ function init() {
     renderMain();
 }
 
-// --- 유틸리티 및 명단 로직 (기존 유지) ---
 function cleanText(val) { return val ? String(val).trim().replace(/^"|"$/g, '').replace(/""/g, '"') : ""; }
 
 function getChildList(station) {
@@ -178,11 +176,11 @@ function getChildList(station) {
     const now = new Date();
     const hour = now.getHours();
     const day = now.getDay(); 
-    if(day === 0 || day === 6) return ""; // 주말은 빈값 처리
+    if(day === 0 || day === 6) return "주말 운행 없음";
     return cleanText((hour < 12) ? station.morning : [null, station.mon, station.tue, station.wed, station.thu, station.fri, null][day]);
 }
 
-// --- CSV 관리 (기존 유지) ---
+// CSV 업로드 핸들러 (백업된 파일의 개별 멘트까지 불러오도록 보강)
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -200,7 +198,8 @@ function handleFile(e) {
                     name: sName, lat: parseFloat(cols[1]), lng: parseFloat(cols[2]),
                     morning: cleanText(cols[3]), mon: cleanText(cols[4]), tue: cleanText(cols[5]), 
                     wed: cleanText(cols[6]), thu: cleanText(cols[7]), fri: cleanText(cols[8]),
-                    customAnnounce: cleanText(cols[9]) || "", useAnnounce: true, useCustom: true
+                    customAnnounce: cleanText(cols[9]) || "", // 백업 파일의 10번째 열(개별 멘트) 로드
+                    useAnnounce: true, useCustom: true
                 });
             }
         }
@@ -208,82 +207,39 @@ function handleFile(e) {
             stations = newRows;
             localStorage.setItem(DB_KEY, JSON.stringify(stations));
             renderMain();
-            alert(stations.length + "개 정류장 데이터 적용 완료!");
+            alert(stations.length + "개 정류장 데이터가 성공적으로 적용되었습니다.");
             showTab('main');
         }
     };
     reader.readAsText(file, "EUC-KR");
 }
 
+// ⭐ CSV 다운로드 (백업) 기능
 function downloadCSV() {
     if (stations.length === 0) return alert("다운로드할 데이터가 없습니다.");
+    
+    // 엑셀에서 한글 깨짐 방지를 위한 BOM 추가
     let csvContent = "\uFEFF"; 
+    // 헤더 정의
     csvContent += "정류장명,위도,경도,오전,월,화,수,목,금,개별추가멘트\n";
+    
     stations.forEach(s => {
-        const row = [s.name, s.lat, s.lng, s.morning, s.mon, s.tue, s.wed, s.thu, s.fri, s.customAnnounce]
-            .map(v => `"${(v || "").toString().replace(/"/g, '""')}"`).join(",");
+        const row = [
+            s.name, s.lat, s.lng, s.morning, s.mon, s.tue, s.wed, s.thu, s.fri, s.customAnnounce
+        ].map(v => `"${(v || "").toString().replace(/"/g, '""')}"`).join(",");
         csvContent += row + "\n";
     });
+    
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `창의나라_백업_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `창의나라_데이터_백업_${dateStr}.csv`);
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
 
-// --- 핵심 로직: 음성 안내 (명단 체크 기능 추가) ---
-function stopSpeak() { 
-    synth.cancel(); 
-    isSpeakingGlobal = false; 
-    if(announcementTimeout) { clearTimeout(announcementTimeout); announcementTimeout = null; }
-}
-
-function speak(idx, isAuto = false) {
-    const s = stations[idx];
-    if (isAuto) {
-        if (!s.useAnnounce) return;
-        const now = Date.now();
-        if (now - (announcedLog[s.name] || 0) < config.waitTime * 60000) return;
-        announcedLog[s.name] = now;
-    }
-    
-    stopSpeak();
-
-    // 1. 기본 안내 멘트 작성
-    let text = config.announceText.replace(/\[정류장\]/g, s.name);
-    
-    // 2. ⭐ 명단 확인 및 추가 메시지 로직
-    const names = getChildList(s);
-    if(names && names !== "") {
-        text += ` 명단은 ${names}입니다. `;
-    } else {
-        // 명단이 비어있을 때 안내 추가
-        text += ` 이곳에서 내릴 어린이는 없습니다. `;
-    }
-    
-    // 3. 개별 추가 멘트 결합
-    if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
-
-    const play = () => {
-        const ut = new SpeechSynthesisUtterance(text);
-        ut.lang = 'ko-KR';
-        ut.onstart = () => { isSpeakingGlobal = true; };
-        ut.onend = () => { if(!announcementTimeout) isSpeakingGlobal = false; };
-        synth.speak(ut);
-    };
-
-    // 1회차 실행
-    play();
-
-    // 2회차 실행 예약 (6초 후)
-    announcementTimeout = setTimeout(() => {
-        announcementTimeout = null;
-        play();
-        setTimeout(() => { isSpeakingGlobal = false; }, 5000);
-    }, 6000);
-}
-
-// --- GPS 및 UI 로직 (기존 유지) ---
 function saveGlobalConfig() {
     config.radius = parseInt(document.getElementById('cfg-radius').value);
     config.announceText = document.getElementById('cfg-announce-text').value;
@@ -293,7 +249,7 @@ function saveGlobalConfig() {
 }
 
 function clearAllData() {
-    if(confirm("모든 데이터를 초기화하시겠습니까?")) {
+    if(confirm("모든 데이터를 초기화하시겠습니까? 업로드한 정류장 정보가 모두 삭제됩니다.")) {
         localStorage.removeItem(DB_KEY);
         stations = [];
         location.reload();
@@ -315,7 +271,7 @@ function renderMain() {
         card.id = `card-${i}`;
         card.innerHTML = `
             <div class="stop-name">${s.useAnnounce ? '' : '🔇 '}${s.name}</div>
-            <div class="child-list">${names || '<span style="color:#ef4444;">내릴 어린이 없음</span>'}</div>
+            <div class="child-list">${names || '명단 없음'}</div>
             ${(s.customAnnounce && s.useCustom) ? `<div class="custom-msg-display">📢 ${s.customAnnounce}</div>` : ''}
             <div class="speaker-controls">
                 <button onclick="stopSpeak()" class="btn-action-icon stop">⬛</button>
@@ -337,8 +293,8 @@ function renderAdminList() {
                 <label style="font-size:1rem;">📍 ${s.name}</label>
                 <label class="switch"><input type="checkbox" id="edit-use-${i}" ${s.useAnnounce?'checked':''}> <span class="slider"></span></label>
             </div>
-            <label>🗣️ 정류장 전용 추가 멘트</label>
-            <textarea id="edit-custom-${i}" placeholder="내용을 입력하세요.">${s.customAnnounce || ''}</textarea>
+            <label>🗣️ 이 정류장 전용 추가 멘트</label>
+            <textarea id="edit-custom-${i}" placeholder="정류장 도착 시 공통 문구 뒤에 추가로 읽어줄 내용을 입력하세요.">${s.customAnnounce || ''}</textarea>
             <button class="btn-save-sm" onclick="saveIndividual(${i})">정류장 설정 저장</button>
         `;
         list.appendChild(item);
@@ -349,8 +305,47 @@ function saveIndividual(i) {
     stations[i].customAnnounce = document.getElementById(`edit-custom-${i}`).value.trim();
     stations[i].useAnnounce = document.getElementById(`edit-use-${i}`).checked;
     localStorage.setItem(DB_KEY, JSON.stringify(stations));
-    alert("저장되었습니다.");
+    alert("해당 정류장 정보가 저장되었습니다.");
     renderMain();
+}
+
+function stopSpeak() { 
+    synth.cancel(); 
+    isSpeakingGlobal = false; 
+    if(announcementTimeout) { clearTimeout(announcementTimeout); announcementTimeout = null; }
+}
+
+function speak(idx, isAuto = false) {
+    const s = stations[idx];
+    if (isAuto) {
+        if (!s.useAnnounce) return;
+        const now = Date.now();
+        if (now - (announcedLog[s.name] || 0) < config.waitTime * 60000) return;
+        announcedLog[s.name] = now;
+    }
+    
+    stopSpeak();
+
+    let text = config.announceText.replace(/\[정류장\]/g, s.name);
+    const names = getChildList(s);
+    if(names) text += ` 명단은 ${names}입니다. `;
+    if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
+
+    const play = () => {
+        const ut = new SpeechSynthesisUtterance(text);
+        ut.lang = 'ko-KR';
+        ut.onstart = () => { isSpeakingGlobal = true; };
+        ut.onend = () => { if(!announcementTimeout) isSpeakingGlobal = false; };
+        synth.speak(ut);
+    };
+
+    play();
+
+    announcementTimeout = setTimeout(() => {
+        announcementTimeout = null;
+        play();
+        setTimeout(() => { isSpeakingGlobal = false; }, 5000);
+    }, 6000);
 }
 
 function manualSpeak(i) { highlight(i); speak(i, false); }
@@ -358,12 +353,11 @@ function manualSpeak(i) { highlight(i); speak(i, false); }
 function highlight(idx) {
     const s = stations[idx];
     const display = document.getElementById('active-station-display');
-    const names = getChildList(s);
     display.innerHTML = `
         <div class="stop-card active" style="border-width:4px;">
             <div style="font-size:0.8rem; color:var(--gr); font-weight:bold;">현재 도착 안내 중</div>
             <div class="stop-name" style="font-size:1.4rem;">${s.name}</div>
-            <div class="child-list" style="font-size:1.1rem; color:white;">${names || '내릴 어린이 없음'}</div>
+            <div class="child-list" style="font-size:1.1rem; color:white;">${getChildList(s) || '명단 없음'}</div>
         </div>
     `;
     document.querySelectorAll('.stop-card').forEach(c => c.classList.remove('active'));
@@ -379,6 +373,7 @@ function toggleTracking() {
         if(stations.length === 0) return alert("데이터를 먼저 업로드하세요.");
         isTracking = true;
         btn.innerText = "운행 중지"; btn.classList.add('active');
+        
         gpsStatus.innerText = "📡 GPS 신호 연결 시도 중...";
         gpsStatus.style.color = "var(--ye)";
 
@@ -395,7 +390,7 @@ function toggleTracking() {
                 }
             });
         }, (err) => {
-            gpsStatus.innerText = "❌ GPS 수신 불가";
+            gpsStatus.innerText = "❌ GPS 수신 불가 (위치 권한 확인 필요)";
             gpsStatus.style.color = "#ef4444";
         }, { enableHighAccuracy: true, maximumAge: 0 });
     } else {
