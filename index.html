@@ -67,9 +67,7 @@ nav button.active{color:var(--ye);}
 .input-group input, .input-group textarea{width:100%;background:#0d1b2a;border:1px solid #334155;padding:10px;border-radius:8px;color:white;}
 
 h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; border-left:4px solid var(--or); padding-left:10px;}
-.upload-section{background:var(--card2); border:2px dashed var(--bl); border-radius:var(--r); padding:20px; text-align:center; margin-bottom:10px; cursor:pointer;}
-
-.btn-backup { background: #118AB2; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(17,138,178,0.3); }
+.upload-section{background:var(--card2); border:2px dashed var(--bl); border-radius:var(--r); padding:20px; text-align:center; margin-bottom:20px; cursor:pointer;}
 
 .reset-zone { margin-top: 10px; border-top: 1px dashed #334155; padding-top: 15px; }
 </style>
@@ -102,14 +100,12 @@ h2.section-title {font-size:1.1rem; color:var(--ye); margin:20px 0 10px 0; borde
 </div>
 
 <div class="container" id="config-view" style="display:none;">
-    <h2 class="section-title">📁 데이터 백업 및 업데이트</h2>
+    <h2 class="section-title">📁 데이터 업데이트 (CSV)</h2>
     <div class="upload-section" id="upload-box">
         <span style="font-size:1.2rem; font-weight:bold;">새 CSV 파일 선택</span>
         <input type="file" id="csv-file" accept=".csv" style="display:none">
         <p style="margin-top:10px; font-size:0.8rem; color:var(--bl);">엑셀 CSV(EUC-KR) 형식을 권장합니다.</p>
     </div>
-    
-    <button id="download-csv-btn" class="btn-backup">📥 현재 전체 데이터 CSV 다운로드 (백업용)</button>
 
     <h2 class="section-title">📢 공통 기본 설정</h2>
     <div style="background:var(--card); padding:15px; border-radius:12px; margin-bottom:20px;">
@@ -183,9 +179,6 @@ function init() {
     document.getElementById('tab-btn-main').onclick = () => showTab('main');
     document.getElementById('tab-btn-config').onclick = () => showTab('config');
     
-    // 다운로드 버튼 연결
-    document.getElementById('download-csv-btn').onclick = downloadCSV;
-    
     const csvFile = document.getElementById('csv-file');
     csvFile.onchange = handleFile;
     document.getElementById('upload-box').onclick = () => csvFile.click();
@@ -204,37 +197,9 @@ function getChildList(station) {
     const now = new Date();
     const hour = now.getHours();
     const day = now.getDay(); 
-    if(day === 0 || day === 6) return ""; 
+    if(day === 0 || day === 6) return "주말 운행 없음";
     let names = (hour < 12) ? station.morning : [null, station.mon, station.tue, station.wed, station.thu, station.fri, null][day];
     return cleanText(names);
-}
-
-// 2. CSV 다운로드 기능 구현 (백업용)
-function downloadCSV() {
-    if (stations.length === 0) {
-        alert("백업할 데이터가 없습니다.");
-        return;
-    }
-
-    let csvContent = "\uFEFF"; // 한글 깨짐 방지 BOM
-    csvContent += "정류장명,위도,경도,오전,월,화,수,목,금,추가멘트\n";
-
-    stations.forEach(s => {
-        let row = [
-            s.name, s.lat, s.lng, s.morning, s.mon, s.tue, s.wed, s.thu, s.fri, s.customAnnounce
-        ].map(v => `"${(v || "").toString().replace(/"/g, '""')}"`).join(",");
-        csvContent += row + "\n";
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const date = new Date().toISOString().slice(0,10);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `창의나라_백업_${date}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
 function handleFile(e) {
@@ -248,7 +213,16 @@ function handleFile(e) {
 function parseCSV(text) {
     const lines = text.split(/\r?\n/);
     const newRows = [];
+    const backupCustom = {};
+    const backupAnnounce = {};
+    const backupUseCustom = {};
     
+    stations.forEach(s => { 
+        backupCustom[s.name] = s.customAnnounce || "";
+        backupAnnounce[s.name] = s.useAnnounce !== false;
+        backupUseCustom[s.name] = s.useCustom !== false;
+    });
+
     for(let i = 1; i < lines.length; i++) {
         let line = lines[i].trim();
         if(!line) continue;
@@ -269,9 +243,9 @@ function parseCSV(text) {
                 lng: parseFloat(cols[2]),
                 morning: cols[3] || "",
                 mon: cols[4] || "", tue: cols[5] || "", wed: cols[6] || "", thu: cols[7] || "", fri: cols[8] || "",
-                customAnnounce: cleanText(cols[9]) || "", // 백업된 추가 멘트 로드
-                useAnnounce: true,
-                useCustom: true
+                customAnnounce: backupCustom[sName] || "",
+                useAnnounce: backupAnnounce[sName] !== false,
+                useCustom: backupUseCustom[sName] !== false
             });
         }
     }
@@ -426,6 +400,7 @@ function stopSpeak() {
     }
 }
 
+// ⭐ 안내 음성 반복 로직 수정 (확실한 2회 반복 보장)
 function speak(idx, isAuto = false) {
     const s = stations[idx];
     if (isAuto && !s.useAnnounce) return;
@@ -435,32 +410,31 @@ function speak(idx, isAuto = false) {
         announcedLog[s.name] = now;
     }
     
-    stopSpeak(); 
+    stopSpeak(); // 기존 타이머/음성 초기화
 
     let text = config.announceText.replace(/\[정류장\]/g, s.name);
     const names = getChildList(s);
-    
-    // 3. 명단 부재 시 자동 멘트 추가 로직
-    if(names && names.trim() !== "") {
-        text += ` 명단은 ${names}입니다. `;
-    } else {
-        text += ` 이곳에서 내릴 어린이는 없습니다. `;
-    }
-    
+    if(names) text += ` 명단은  ${names}입니다. `;
     if(s.customAnnounce && s.useCustom !== false) text += ` ${s.customAnnounce}`;
 
     const utterOnce = () => {
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'ko-KR';
         ut.onstart = () => { isSpeakingGlobal = true; };
-        ut.onend = () => { };
+        ut.onend = () => { 
+            // 두 번째 안내까지 모두 끝나야 다른 안내가 가능하게 함 (옵션)
+            // isSpeakingGlobal = false; // 이 부분을 지우고 타이머 끝에서 처리
+        };
         synth.speak(ut);
     };
 
+    // 1회차 즉시 실행
     utterOnce();
 
+    // 2회차 6초 뒤 실행 예약
     announcementTimeout = setTimeout(() => {
         utterOnce();
+        // 모든 안내가 끝난 것으로 간주 (약 3~4초 뒤 해제)
         setTimeout(() => { isSpeakingGlobal = false; }, 4000);
     }, 6000);
 }
@@ -469,12 +443,11 @@ function manualSpeak(i) { highlight(i); speak(i, false); }
 
 function highlight(idx) {
     const s = stations[idx];
-    const names = getChildList(s);
     document.getElementById('active-station-display').innerHTML = `
         <div class="stop-card active" style="border-width:4px; margin-top:10px;">
             <div style="font-size:0.8rem; color:var(--gr); font-weight:bold; margin-bottom:5px;">현재 정류장 도착</div>
             <div class="stop-name" style="font-size:1.4rem;">${s.name}</div>
-            <div class="child-list" style="font-size:1.1rem; color:white;">${names || '내릴 어린이 없음'}</div>
+            <div class="child-list" style="font-size:1.1rem; color:white;">${getChildList(s) || '명단 없음'}</div>
             ${(s.customAnnounce && s.useCustom) ? `<div class="custom-msg-display" style="font-size:1rem;">📢 ${s.customAnnounce}</div>` : ''}
             <div class="speaker-controls">
                 <button onclick="stopSpeak()" class="btn-action-icon stop" style="background:rgba(239, 68, 68, 0.2)">⬛</button>
@@ -488,6 +461,7 @@ function highlight(idx) {
     }
 }
 
+// ⭐ GPS 상태 실시간 업데이트 로직 (유지)
 function toggleTracking() {
     const btn = document.getElementById('track-btn');
     const gpsStatus = document.getElementById('gps-status');
@@ -499,12 +473,14 @@ function toggleTracking() {
         btn.innerText = "운행 중지"; 
         btn.classList.add('active');
         
+        // 클릭 즉시 상태 변경
         gpsStatus.innerText = "📡 GPS 신호 연결 시도 중...";
         gpsStatus.style.color = "var(--ye)";
 
         watchId = navigator.geolocation.watchPosition(pos => {
             const {latitude: lat, longitude: lng, accuracy} = pos.coords;
             
+            // 수신 성공 시 즉시 정보 표시
             gpsStatus.innerText = `📡 GPS 수신 중 (정확도: ${Math.round(accuracy)}m)`;
             gpsStatus.style.color = "var(--gr)";
 
@@ -568,3 +544,4 @@ window.onload = init;
 </script>
 </body>
 </html>
+
